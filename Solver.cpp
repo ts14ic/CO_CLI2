@@ -38,6 +38,8 @@ std::ostream& operator<<(std::ostream& os, Solver const& solver) {
 }
 
 bool Solver::set_goal(std::string const& str) {
+    if(!_restrs.empty()) return false;
+    
     Goal newGoal;
     if(!newGoal.parse_and_set(str)) return false;
     
@@ -50,8 +52,24 @@ bool Solver::set_goal(std::string const& str) {
 
 
 bool Solver::add_restriction(std::string const& str) {
+    if(_goal.terms().empty()) return false;
+    
     Restriction newRestriction;
     if(!newRestriction.parse_and_set(str)) return false;
+    
+    if(_goal.size() > newRestriction.size()) {
+        newRestriction.add_term(_goal.last_idx());
+    }
+    else if(_goal.size() < newRestriction.size()) {
+        _goal.add_term(newRestriction.last_idx());
+        _initialBasis = _goal.indices();
+        
+        for(auto& res : _restrs) {
+            if(res.size() < newRestriction.size()) {
+                res.add_term(newRestriction.last_idx());
+            }
+        }
+    }
     
     _restrs.push_back(newRestriction);
     return true;
@@ -77,11 +95,10 @@ void Solver::append_preferred() {
 }
 
 void Solver::append_artificial() {
-    auto termsNum = _goal.size();
     auto restrNum = _restrs.size();
     _sel.resize(restrNum);
     
-    for(auto i = 1; i <= termsNum; ++i) {
+    for(int i : _goal.indices()) {
         bool gotOne = false;
         
         for(auto r = 0u; r < restrNum; ++r) {
@@ -125,7 +142,7 @@ void Solver::append_artificial() {
 
 Solver& Solver::invert_to_dual() {
     // FIXME check if restrictions are flat
-    
+
     int oldTermsNum = _goal.size();
     int oldRestrNum = _restrs.size();
     
@@ -288,16 +305,16 @@ static void pack_end_results(Solver::Step& lastStep, vector<int> const& indices)
     auto restrsNum = lastStep.restrs.size();
     
     for(int i : indices) {
-        bool present = false;
+        bool selected = false;
         for(auto row = 0u; row < restrsNum; ++row) {
             if(i == lastStep.sel[row].idx()) {
                 Term t{i, lastStep.restrs[row].right()};
                 lastStep.basis.push_back(t);
-                present = true;
+                selected = true;
                 break;
             }
         }
-        if(!present) {
+        if(!selected) {
             lastStep.basis.push_back(Term{i});
         }
     }

@@ -397,9 +397,15 @@ SUITE(Solver) {
             solver[7].add_restriction("  x1 -  2x2 <= 12");
             solver[7].add_restriction(" 4x1 +   x2 <= 16");
             solver[7].add_restriction(" 5x1 +  5x2 >= 25");
+            
+            special.set_goal("x1 + x2 => min");
+            special.add_restriction("2x1 + 4x2 <= 16");
+            special.add_restriction("-4x1 + 2x2 <= 8");
+            special.add_restriction("1x1 + 3x2 + 1x4 >= 9");
         }
     
         Solver solver[8];
+        Solver special;
     };
     
     TEST(SolverSetup) {
@@ -475,8 +481,8 @@ SUITE(Solver) {
             }
         }
         
-//        s = solver[3].solve().back();
-//        CHECK(!s.valid());
+        s = solver[3].solve().back();
+        CHECK(!s.valid());
         
         s = solver[4].solve().back();
         CHECK(s.valid());
@@ -544,6 +550,26 @@ SUITE(Solver) {
                 
                 case 2:
                 CHECK(t.coeff() == 16);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
+        
+        s = special.solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 4);
+        CHECK(s.w == 0);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                case 2:
+                case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                case 4:
+                CHECK(t.coeff() == 9);
                 break;
                 
                 default: CHECK(0 == 1);
@@ -617,6 +643,16 @@ SUITE(Solver) {
                           "   8  1  4 -5 >=\n"
                           "   7 -2  1 -5 >=\n"
                           "]");
+
+        special.invert_to_dual();
+        ss.str(""); ss << special;
+        CHECK(ss.str() == "[Solver\n"
+                          "max: -16 -8  9\n"
+                          "   1 -2  4  1 <=\n"
+                          "   1 -4 -2  3 <=\n"
+                          "   0  0  0  0 <=\n"
+                          "   0  0  0  1 <=\n"
+                          "]");
     }
     
     TEST_FIXTURE(SolverFixture, SolvingInverted) {
@@ -687,8 +723,8 @@ SUITE(Solver) {
         }
         
         // Unsolvable, success but slow
-//        s = solver[3].invert_to_dual().solve().back();
-//        CHECK(!s.valid());
+        s = solver[3].invert_to_dual().solve().back();
+        CHECK(!s.valid());
         
         s = solver[4].invert_to_dual().solve().back();
         CHECK(s.valid());
@@ -770,6 +806,22 @@ SUITE(Solver) {
                 CHECK(t.coeff() == 7);
                 break;
                 
+                case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
+        
+        s = special.invert_to_dual().solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 3);
+        CHECK(s.w == 0);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                case 2:
                 case 3:
                 CHECK(t.coeff() == 0);
                 break;

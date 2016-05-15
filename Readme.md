@@ -6,4 +6,4 @@ Uses Boost.Optional
 
 Known issues
 ------------
-* Transposing matrices doesn't check for them to be uniform throughout length
+* Infinite loops are still possible
