@@ -65,8 +65,8 @@ public:
 private:
     void simplify();
 
-    int _num;
-    int _den;
+    int _num = 0;
+    int _den = 1;
 };
 
 

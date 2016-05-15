@@ -233,8 +233,8 @@ static void calculate_price(Solver::Step& s) {
             psum -= colTerm.coeff();
         }
         
-        s.pprice[col - 1] = psum;
-        s.mprice[col - 1] = msum;
+        s.pprice.coeff(col) = psum;
+        s.mprice.coeff(col) = msum;
     }
     
     calculate_wm(s);
@@ -253,22 +253,35 @@ static bool need_to_calc_artificial(Solver::Step const& s) {
     return ret;
 }
 
+static int max_element(Polynom const& g) {
+    int ret = g.last_idx();
+    for(int i : g.indices()) {
+        if(g.coeff(i) > g.coeff(ret)) ret = i;
+    }
+    return ret;
+}
+
+static int min_element(Polynom const& g) {
+    int ret = g.last_idx();
+    for(int i : g.indices()) {
+        if(g.coeff(i) < g.coeff(ret)) ret = i;
+    }
+    return ret;
+}
+
 static int select_column(Solver::Step& s, bool artificial) {
-    auto begin = artificial ? s.mprice.begin() : s.pprice.begin();
-    auto end   = artificial ? s.mprice.end() : s.pprice.end();
+    Polynom const& pol = artificial ? s.mprice : s.pprice;
     
-    auto minmax = s.goal.right() == "min" ? 
-                  std::max_element(begin, end) :
-                  std::min_element(begin, end);
-
-    int selCol = 0;
-
-    if((s.goal.right() == "min" && *minmax > 0) ||
-       (s.goal.right() == "max" && *minmax < 0)) {
-        selCol = std::distance(begin, minmax) + 1;
+    if(s.goal.right() == "min") {
+        int selCol = max_element(pol);
+        if(pol.coeff(selCol) > 0) return selCol;
+    }
+    else {
+        int selCol = min_element(pol);
+        if(pol.coeff(selCol) < 0) return selCol;
     }
     
-    return selCol;
+    return 0;
 }
 
 static void pack_end_results(Solver::Step& lastStep, vector<int> const& indices) {
@@ -374,8 +387,10 @@ static Solver::Step advance_step(Solver::Step const& prev, int selCol, unsigned 
         for(auto& r: next.restrs) {
             r.remove_term(prev.sel[selRow].idx());
         }
-        next.pprice.erase(next.pprice.begin() + prev.sel[selRow].idx() - 1);
-        next.mprice.erase(next.mprice.begin() + prev.sel[selRow].idx() - 1);
+        
+        auto idx = prev.sel[selRow].idx();
+        next.pprice.remove_term(idx);
+        next.mprice.remove_term(idx);
     }
     next.sel[selRow] = next.goal.term(selCol);
     
@@ -417,8 +432,8 @@ vector<Solver::Step> Solver::solve() {
     s.goal   = _goal;
     s.sel    = _sel;
     s.restrs = _restrs;
-    s.pprice = vector<Fraction>(_goal.size());
-    s.mprice = vector<Fraction>(_goal.size());
+    s.pprice.add_term(_goal.last_idx());
+    s.mprice.add_term(_goal.last_idx());
     
     
     while(true) {
@@ -480,12 +495,12 @@ void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newlin
     }
     
     os << tab << "</Restrs>\n" << tab << "<pprice>";
-    for(auto f: s.pprice) {
-        os << std::setw(4) << f;
+    for(int i : s.pprice.indices()) {
+        os << std::setw(4) << s.pprice.coeff(i);
     }
     os << "</pprice>\n" << tab << "<mprice>";
-    for(auto f: s.mprice) {
-        os << std::setw(4) << f;
+    for(int i : s.mprice.indices()) {
+        os << std::setw(4) << s.mprice.coeff(i);
     }
     os << "</mprice>\n</Step>\n";
     

@@ -2,22 +2,16 @@
 #include <stdexcept>
 #include <iostream>
 
-Fraction::Fraction(int n, int d)
-: _num(n), _den(d)
-{
+Fraction::Fraction(int n, int d) : _num(n), _den(d) {
     if(d == 0) throw std::logic_error("zero denominator");
     simplify();
 }
 
-Fraction::Fraction(int n)
-: _num(n), _den(1)
-{
+Fraction::Fraction(int n) : _num(n) {
     simplify();
 }
 
-Fraction::Fraction()
-: _num(0), _den(1)
-{
+Fraction::Fraction() {
     simplify();
 }
 

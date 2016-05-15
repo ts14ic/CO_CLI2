@@ -32,8 +32,8 @@ struct Solver::Step {
     Goal                     goal;
     std::vector<Term>        sel;
     std::vector<Restriction> restrs;
-    std::vector<Fraction>    pprice;
-    std::vector<Fraction>    mprice;
+    Polynom                  pprice;
+    Polynom                  mprice;
     std::vector<Term>        basis;
     Fraction                 w;
     Fraction                 m;
