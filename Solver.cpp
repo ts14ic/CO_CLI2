@@ -439,6 +439,13 @@ static Solver::Step advance_step(Solver::Step const& prev, int selCol, unsigned 
     return next;
 }
 
+static bool step_is_unique(Solver::Step const& step, vector<Solver::Step> const& steps) {
+    for(auto const& s : steps) {
+        if(step == s) return false;
+    }
+    return true;
+}
+
 vector<Solver::Step> Solver::solve() {
     append_preferred();
     append_artificial();
@@ -455,7 +462,12 @@ vector<Solver::Step> Solver::solve() {
     
     while(true) {
         calculate_price(s);
-        steps.push_back(s);
+        if(step_is_unique(s, steps)) {
+            steps.push_back(s);
+        }
+        else {
+            break;
+        }
         
         int selCol = 0;
         if(need_to_calc_artificial(s)) {
@@ -493,6 +505,16 @@ bool Solver::Step::valid() const {
         if(t.big()) return false;
     }
     return true;
+}
+
+bool Solver::Step::operator ==(Step const& o) const {
+    return goal == o.goal &&
+           sel == o.sel &&
+           restrs == o.restrs &&
+           pprice == o.pprice &&
+           mprice == o.mprice &&
+           basis == o.basis &&
+           w == o.w && m == o.m;
 }
 
 void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newline) {

@@ -39,6 +39,7 @@ struct Solver::Step {
     Fraction                 m;
     
     bool valid() const;
+    bool operator ==(Step const& o) const;
 };
 
 void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newline = false);

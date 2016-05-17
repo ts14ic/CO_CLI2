@@ -234,6 +234,10 @@ int Polynom::size() const {
     return static_cast<int>(_terms.size());
 }
 
+bool Polynom::operator ==(Polynom const& o) const {
+    return _terms == o._terms;
+}
+
 void Polynom::simplify() {
     // sum simillar
     for(auto i = 0u; i < _terms.size(); ++i) {

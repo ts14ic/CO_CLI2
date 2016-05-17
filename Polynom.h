@@ -34,6 +34,8 @@ public:
     int last_idx() const;
     int next_idx() const;
     int size() const;
+    
+    bool operator ==(Polynom const& o) const;
 
     friend std::ostream& operator<<(std::ostream& os, Polynom const& pnom);
 

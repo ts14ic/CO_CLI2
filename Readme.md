@@ -6,4 +6,4 @@ Uses Boost.Optional
 
 Known issues
 ------------
-* Infinite loops are still possible
+* No known at the moment

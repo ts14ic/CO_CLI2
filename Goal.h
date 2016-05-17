@@ -13,6 +13,7 @@ public:
     std::string const& right() const;
     void right(std::string const& newRight);
     
+    bool operator ==(Goal const& o) const;
     friend std::ostream& operator<<(std::ostream& os, Goal const& g);
 
 private:

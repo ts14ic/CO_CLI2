@@ -102,6 +102,10 @@ Fraction const& Restriction::right() const {
     return _right;
 }
 
+bool Restriction::operator ==(Restriction const& o) const {
+    return _terms == o._terms && _rel == o._rel && _right == o._right;
+}
+
 std::ostream& operator<<(std::ostream& os, Restriction const& r) {
     if(!std::ostream::sentry{os}) return os;
     if(r.size() < 1) return os << "[Restriction:]";

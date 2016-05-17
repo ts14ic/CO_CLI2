@@ -16,6 +16,7 @@ public:
     Fraction& right();
     Fraction const& right() const;
     
+    bool operator ==(Restriction const& o) const;
     friend std::ostream& operator<<(std::ostream& os, Restriction const& r);
 
 private:

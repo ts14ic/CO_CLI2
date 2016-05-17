@@ -59,6 +59,10 @@ void Goal::right(std::string const& newRight) {
     }
 }
 
+bool Goal::operator ==(Goal const& o) const {
+    return _terms == o._terms && _right == o._right;
+}
+
 std::ostream& operator<<(std::ostream& os, Goal const& g) {
     if(!std::ostream::sentry{os}) return os;
     if(g.size() < 1) return os << "[Goal:]";

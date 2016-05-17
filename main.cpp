@@ -398,14 +398,18 @@ SUITE(Solver) {
             solver[7].add_restriction(" 4x1 +   x2 <= 16");
             solver[7].add_restriction(" 5x1 +  5x2 >= 25");
             
-            special.set_goal("x1 + x2 => min");
-            special.add_restriction("2x1 + 4x2 <= 16");
-            special.add_restriction("-4x1 + 2x2 <= 8");
-            special.add_restriction("1x1 + 3x2 + 1x4 >= 9");
+            solver[8].set_goal("x1 + x2 => min");
+            solver[8].add_restriction("2x1 + 4x2 <= 16");
+            solver[8].add_restriction("-4x1 + 2x2 <= 8");
+            solver[8].add_restriction("1x1 + 3x2 + 1x4 >= 9");
+            
+            solver[9].set_goal("x1 + x2 => min");
+            solver[9].add_restriction(" 2x1 + 4x2 <= 1");
+            solver[9].add_restriction("-4x1 + 2x2 <= 8");
+            solver[9].add_restriction(" 1x1 + 3x2 >= 9");
         }
     
-        Solver solver[8];
-        Solver special;
+        Solver solver[10];
     };
     
     TEST(SolverSetup) {
@@ -556,7 +560,7 @@ SUITE(Solver) {
             }
         }
         
-        s = special.solve().back();
+        s = solver[8].solve().back();
         CHECK(s.valid());
         CHECK(s.basis.size() == 4);
         CHECK(s.w == 0);
@@ -575,6 +579,9 @@ SUITE(Solver) {
                 default: CHECK(0 == 1);
             }
         }
+        
+        s = solver[9].solve().back();
+        CHECK(!s.valid());
     }
     
     TEST_FIXTURE(SolverFixture, Inversion) {
@@ -644,8 +651,8 @@ SUITE(Solver) {
                           "   7 -2  1 -5 >=\n"
                           "]");
 
-        special.invert_to_dual();
-        ss.str(""); ss << special;
+        solver[8].invert_to_dual();
+        ss.str(""); ss << solver[8];
         CHECK(ss.str() == "[Solver\n"
                           "max: -16 -8  9\n"
                           "   1 -2  4  1 <=\n"
@@ -814,7 +821,7 @@ SUITE(Solver) {
             }
         }
         
-        s = special.invert_to_dual().solve().back();
+        s = solver[8].invert_to_dual().solve().back();
         CHECK(s.valid());
         CHECK(s.basis.size() == 3);
         CHECK(s.w == 0);
