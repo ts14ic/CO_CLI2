@@ -323,7 +323,7 @@ static void pack_end_results(Solver::Step& lastStep, vector<int> const& indices)
 }
 
 static vector<Optional<Fraction>>::const_iterator 
-min_div(vector<Optional<Fraction>> const& divs) {
+uniq_min_div(vector<Optional<Fraction>> const& divs) {
     // first we need to find any allowed value
     auto i = divs.begin();
     while(i != divs.end()) {
@@ -357,7 +357,10 @@ min_div(vector<Optional<Fraction>> const& divs) {
     }
 }
 
-static unsigned select_row(vector<Fraction> const& selCol, vector<Optional<Fraction>> const& divndCol) {
+static unsigned select_row(
+    vector<Fraction> const& selCol, 
+    vector<Optional<Fraction>> const& dividends
+) {
     auto const rowsNum = selCol.size();
     
     vector<Optional<Fraction>> divs (rowsNum);
@@ -365,23 +368,75 @@ static unsigned select_row(vector<Fraction> const& selCol, vector<Optional<Fract
     
     for(auto i = 0u; i < rowsNum; ++i) {
         // if there is what to divide, and there is no division by zero
-        if(divndCol[i] && selCol[i] != 0) {
+        if(dividends[i] && *dividends[i] >= 0 && selCol[i] > 0) {
             noValues = false;
-            auto div = *divndCol[i] / selCol[i];
-            if(div >= 0) divs[i] = div;
+            divs[i] = *dividends[i] / selCol[i];
         }
     }
     
-    auto minDiv = min_div(divs);
-    if(minDiv != divs.end()) {
-        return std::distance(divs.cbegin(), minDiv);
-    }
-    else if(noValues) {
+    if(noValues) {
         return rowsNum;
     }
     else {
-        return select_row(selCol, divs);
+        return std::distance(divs.cbegin(), uniq_min_div(divs));
     }
+}
+
+static vector<unsigned> get_rows_in_question(Solver::Step const& s, int col) {
+    auto const rowsNum = s.restrs.size();
+    vector<Optional<Fraction>> divs (rowsNum);
+    
+    for(auto i = 0u; i < rowsNum; ++i) {
+        auto const& divisor = s.restrs[i].coeff(col);
+        auto const& dividend = s.restrs[i].right();
+        
+        // No division by zero
+        if(dividend >= 0 && divisor > 0) {
+            divs[i] = dividend / divisor;;
+        }
+    }
+    
+    auto begin = divs.begin();
+    while(!*begin && begin != divs.end()) {
+        ++begin;
+    }
+    auto smallest = *begin;
+    while(begin != divs.end()) {
+        if(*begin && **begin < smallest) smallest = *begin;
+        ++begin;
+    }
+    
+    vector<unsigned> ret;
+    for(auto i = 0u; i < rowsNum; ++i) {
+        if(divs[i] && *divs[i] == smallest) ret.push_back(i);
+    }
+    
+    return ret;
+}
+
+static unsigned creco_select_row(Solver::Step const& s, int col) {
+    auto rowsNum = s.restrs.size();
+    auto rowsToCheck = get_rows_in_question(s, col);
+    
+    for(auto i : s.goal.indices()) {
+        if(i == col) continue;
+        
+        vector<Optional<Fraction>> divs (rowsNum);
+        for(auto row = 0u; row < s.restrs.size(); ++row) {
+            auto const& divisor = s.restrs[row].coeff(col);
+            
+            if(divisor != 0) {
+                divs[row] = s.restrs[row].coeff(i) / divisor;
+            }
+        }
+        
+        auto smallest = uniq_min_div(divs);
+        if(smallest != divs.end()) {
+            return std::distance(divs.cbegin(), smallest);
+        }
+    }
+    
+    return rowsNum;
 }
 
 static unsigned select_row(Solver::Step const& s, int col) {
@@ -395,7 +450,14 @@ static unsigned select_row(Solver::Step const& s, int col) {
         divnd[i]  = s.restrs[i].right();
     }
     
-    return select_row(selCol, divnd);
+    auto selectedRow = select_row(selCol, divnd);
+    
+    if(selectedRow != rowsNum) {
+        return selectedRow;
+    }
+    else {
+        return creco_select_row(s, col);
+    }
 }
 
 static Solver::Step advance_step(Solver::Step const& prev, int selCol, unsigned selRow) {
