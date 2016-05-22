@@ -12,9 +12,10 @@ using std::vector;
 template <typename T>
 using Optional = boost::optional<T>;
 
+using OptFraction = boost::optional<Fraction>;
+
 std::ostream& operator<<(std::ostream& os, Solver const& solver) {
     if(!std::ostream::sentry{os}) return os;
-    
     
     os << "[Solver\n";
     auto const& goal = solver._goal;
@@ -209,308 +210,293 @@ Solver& Solver::invert_to_dual() {
     return *this;
 }
 
-static void calculate_wm(Solver::Step& step) {
-    auto restrsNum = step.restrs.size();
-    
-    step.w = 0;
-    step.m = 0;
-    for(auto row = 0u; row < restrsNum; ++row) {
-        if(!step.sel[row].big()) {
-            step.w += step.sel[row].coeff() * step.restrs[row].right();
-        }
-        else {
-            step.m += step.sel[row].coeff() * step.restrs[row].right();
-        }
-    }
-}
-
-static void calculate_price(Solver::Step& s) {
-    auto restrsNum = s.restrs.size();
-    
-    for(int col : s.goal.indices()) {
-        Fraction psum, msum;
+inline namespace helpers {
+    void 
+    calculate_wm(Solver::Step& step) {
+        auto restrsNum = step.restrs.size();
+        
+        step.w = 0;
+        step.m = 0;
         for(auto row = 0u; row < restrsNum; ++row) {
-            auto& resTerms = s.restrs[row];
-            
-            auto toAdd = s.sel[row].coeff() * resTerms.coeff(col);
-            
-            if(s.sel[row].big()) {
-                msum += toAdd;
+            if(!step.sel[row].big()) {
+                step.w += step.sel[row].coeff() * step.restrs[row].right();
             }
             else {
-                psum += toAdd;
+                step.m += step.sel[row].coeff() * step.restrs[row].right();
             }
         }
+    }
+
+    void 
+    calculate_price(Solver::Step& s) {
+        auto restrsNum = s.restrs.size();
         
-        Term const& colTerm = s.goal.term(col);
-        if(colTerm.big()) {
-            msum -= colTerm.coeff();
-        }
-        else {
-            psum -= colTerm.coeff();
+        for(int col : s.goal.indices()) {
+            Fraction psum, msum;
+            for(auto row = 0u; row < restrsNum; ++row) {
+                auto& resTerms = s.restrs[row];
+                
+                auto toAdd = s.sel[row].coeff() * resTerms.coeff(col);
+                
+                if(s.sel[row].big()) {
+                    msum += toAdd;
+                }
+                else {
+                    psum += toAdd;
+                }
+            }
+            
+            Term const& colTerm = s.goal.term(col);
+            if(colTerm.big()) {
+                msum -= colTerm.coeff();
+            }
+            else {
+                psum -= colTerm.coeff();
+            }
+            
+            s.pprice.coeff(col) = psum;
+            s.mprice.coeff(col) = msum;
         }
         
-        s.pprice.coeff(col) = psum;
-        s.mprice.coeff(col) = msum;
+        calculate_wm(s);
     }
-    
-    calculate_wm(s);
-}
 
-static bool need_to_calc_artificial(Solver::Step const& s) {
-    bool ret = false;
-    
-    for(int i : s.goal.indices()) {
-        if(s.goal.big(i)) {
-            ret = true;
-            break;
-        }
-    }
-    
-    return ret;
-}
-
-static int max_element(Polynom const& g) {
-    int ret = g.last_idx();
-    for(int i : g.indices()) {
-        if(g.coeff(i) > g.coeff(ret)) ret = i;
-    }
-    return ret;
-}
-
-static int min_element(Polynom const& g) {
-    int ret = g.last_idx();
-    for(int i : g.indices()) {
-        if(g.coeff(i) < g.coeff(ret)) ret = i;
-    }
-    return ret;
-}
-
-static int select_column(Solver::Step& s, bool artificial) {
-    Polynom const& pol = artificial ? s.mprice : s.pprice;
-    
-    if(s.goal.right() == "min") {
-        int selCol = max_element(pol);
-        if(pol.coeff(selCol) > 0) return selCol;
-    }
-    else {
-        int selCol = min_element(pol);
-        if(pol.coeff(selCol) < 0) return selCol;
-    }
-    
-    return 0;
-}
-
-static void pack_end_results(Solver::Step& lastStep, vector<int> const& indices) {
-    auto restrsNum = lastStep.restrs.size();
-    
-    for(int i : indices) {
-        bool selected = false;
-        for(auto row = 0u; row < restrsNum; ++row) {
-            if(i == lastStep.sel[row].idx()) {
-                Term t{i, lastStep.restrs[row].right()};
-                lastStep.basis.push_back(t);
-                selected = true;
+    bool 
+    need_to_calc_artificial(Solver::Step const& s) {
+        bool ret = false;
+        
+        for(int i : s.goal.indices()) {
+            if(s.goal.big(i)) {
+                ret = true;
                 break;
             }
         }
-        if(!selected) {
-            lastStep.basis.push_back(Term{i});
-        }
-    }
-    
-    lastStep.mark_as_valid();
-}
-
-static vector<Optional<Fraction>>::const_iterator 
-uniq_min_div(vector<Optional<Fraction>> const& divs) {
-    // first we need to find any allowed value
-    auto i = divs.begin();
-    while(i != divs.end()) {
-        if(*i) break;
-        ++i;
-    }
-    // it's possible, there is no min allowed value
-    if(i == divs.end()) return i;
-    // second, if any values remaining, we look if there are smaller values
-    bool smallestIsUniq = true;
-    auto smallest = i;
-    ++i;
-    while(i != divs.end()) {
-        if(*i) {
-            if(**i < **smallest) {
-                smallest = i;
-                smallestIsUniq = true;
-            }
-            else if(**i == **smallest){
-                smallestIsUniq = false;
-            }
-        }
-        ++i;
-    }
-    
-    if(smallestIsUniq) {
-        return smallest;
-    }
-    else {
-        return divs.end();
-    }
-}
-
-static unsigned select_row(
-    vector<Fraction> const& selCol, 
-    vector<Optional<Fraction>> const& dividends
-) {
-    auto const rowsNum = selCol.size();
-    
-    vector<Optional<Fraction>> divs (rowsNum);
-    bool noValues = true;
-    
-    for(auto i = 0u; i < rowsNum; ++i) {
-        // if there is what to divide, and there is no division by zero
-        if(dividends[i] && *dividends[i] >= 0 && selCol[i] > 0) {
-            noValues = false;
-            divs[i] = *dividends[i] / selCol[i];
-        }
-    }
-    
-    if(noValues) {
-        return rowsNum;
-    }
-    else {
-        return std::distance(divs.cbegin(), uniq_min_div(divs));
-    }
-}
-
-static vector<unsigned> get_rows_in_question(Solver::Step const& s, int col) {
-    auto const rowsNum = s.restrs.size();
-    vector<Optional<Fraction>> divs (rowsNum);
-    
-    for(auto i = 0u; i < rowsNum; ++i) {
-        auto const& divisor = s.restrs[i].coeff(col);
-        auto const& dividend = s.restrs[i].right();
         
-        // No division by zero
-        if(dividend >= 0 && divisor > 0) {
-            divs[i] = dividend / divisor;;
-        }
+        return ret;
     }
-    
-    auto begin = divs.begin();
-    while(!*begin && begin != divs.end()) {
-        ++begin;
-    }
-    auto smallest = *begin;
-    while(begin != divs.end()) {
-        if(*begin && **begin < smallest) smallest = *begin;
-        ++begin;
-    }
-    
-    vector<unsigned> ret;
-    for(auto i = 0u; i < rowsNum; ++i) {
-        if(divs[i] && *divs[i] == smallest) ret.push_back(i);
-    }
-    
-    return ret;
-}
 
-static unsigned creco_select_row(Solver::Step const& s, int col) {
-    auto rowsNum = s.restrs.size();
-    auto rowsToCheck = get_rows_in_question(s, col);
-    
-    for(auto i : s.goal.indices()) {
-        if(i == col) continue;
-        
-        vector<Optional<Fraction>> divs (rowsNum);
-        for(auto row = 0u; row < s.restrs.size(); ++row) {
-            auto const& divisor = s.restrs[row].coeff(col);
-            
-            if(divisor != 0) {
-                divs[row] = s.restrs[row].coeff(i) / divisor;
-            }
+    int 
+    max_element(Polynom const& g) {
+        int ret = g.last_idx();
+        for(int i : g.indices()) {
+            if(g.coeff(i) > g.coeff(ret)) ret = i;
         }
-        
-        auto smallest = uniq_min_div(divs);
-        if(smallest != divs.end()) {
-            return std::distance(divs.cbegin(), smallest);
-        }
+        return ret;
     }
-    
-    return rowsNum;
-}
 
-static unsigned select_row(Solver::Step const& s, int col) {
-    auto rowsNum = s.restrs.size();
-    
-    vector<Fraction>           selCol (rowsNum);
-    vector<Optional<Fraction>> divnd (rowsNum);
-    
-    for(auto i = 0u; i < rowsNum; ++i) {
-        selCol[i] = s.restrs[i].coeff(col);
-        divnd[i]  = s.restrs[i].right();
-    }
-    
-    auto selectedRow = select_row(selCol, divnd);
-    
-    if(selectedRow != rowsNum) {
-        return selectedRow;
-    }
-    else {
-        return creco_select_row(s, col);
-    }
-}
-
-static Solver::Step advance_step(Solver::Step const& prev, int selCol, unsigned selRow) {
-    Solver::Step next = prev;
-    
-    if(next.goal.big(prev.sel[selRow].idx())) {
-        next.goal.remove_term(prev.sel[selRow].idx());
-        for(auto& r: next.restrs) {
-            r.remove_term(prev.sel[selRow].idx());
+    int 
+    min_element(Polynom const& g) {
+        int ret = g.last_idx();
+        for(int i : g.indices()) {
+            if(g.coeff(i) < g.coeff(ret)) ret = i;
         }
-        
-        auto idx = prev.sel[selRow].idx();
-        next.pprice.remove_term(idx);
-        next.mprice.remove_term(idx);
+        return ret;
     }
-    next.sel[selRow] = next.goal.term(selCol);
-    
-    auto restrsNum = prev.restrs.size();
-    auto divisor = prev.restrs[selRow].coeff(selCol);
+
+    int
+    select_column(Solver::Step& s, bool artificial) {
+        Polynom const& pol = artificial ? s.mprice : s.pprice;
         
-    for(auto r = 0u; r < restrsNum; ++r) {
-        if(r == selRow) {
-            for(int i : next.goal.indices()) {
-                next.restrs[r].coeff(i) /= divisor;
-            }
-            next.restrs[r].right() /= divisor;
+        if(s.goal.right() == "min") {
+            int selCol = max_element(pol);
+            if(pol.coeff(selCol) > 0) return selCol;
         }
         else {
-            for(int i : next.goal.indices()) {
-                next.restrs[r].coeff(i) =
-                    (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].coeff(i) -
-                    prev.restrs[r].coeff(selCol) * prev.restrs[selRow].coeff(i)) /
-                    divisor;
-            }
-            
-            next.restrs[r].right() =
-                (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].right() -
-                prev.restrs[r].coeff(selCol) * prev.restrs[selRow].right())
-                / divisor;
+            int selCol = min_element(pol);
+            if(pol.coeff(selCol) < 0) return selCol;
         }
+        
+        return 0;
+    }
+
+    void 
+    pack_end_results(Solver::Step& lastStep, vector<int> const& indices) {
+        auto restrsNum = lastStep.restrs.size();
+        
+        for(int i : indices) {
+            bool selected = false;
+            for(auto row = 0u; row < restrsNum; ++row) {
+                if(i == lastStep.sel[row].idx()) {
+                    Term t{i, lastStep.restrs[row].right()};
+                    lastStep.basis.push_back(t);
+                    selected = true;
+                    break;
+                }
+            }
+            if(!selected) {
+                lastStep.basis.push_back(Term{i});
+            }
+        }
+        
+        lastStep.mark_as_valid();
     }
     
-    return next;
+    vector<Fraction>
+    get_col(Solver::Step const& s, int col) {
+        auto const rowsNum = s.restrs.size();
+        
+        vector<Fraction> ret (rowsNum);
+        for(auto row = 0u; row < rowsNum; ++row) {
+            if(col == 0) {
+                ret[row] = s.restrs[row].right();
+            }
+            else {
+                ret[row] = s.restrs[row].coeff(col);
+            }
+        }
+        
+        return ret;
+    }
+    
+    enum class Division {
+        DontAllowNegative,
+        AllowNegative
+    };
+    
+    vector<OptFraction>
+    divide_cols(vector<Fraction> const& a, vector<Fraction> const& b, Division const& policy) {
+        auto const rowsNum = a.size();
+        
+        vector<OptFraction> ret (rowsNum);
+        
+        for(auto i = 0u; i < rowsNum; ++i) {
+            if((policy == Division::DontAllowNegative && b[i] > 0) || 
+               (policy == Division::AllowNegative && b[i] != 0)) 
+            {
+                ret[i] = a[i] / b[i];
+            }
+        }
+        
+        return ret;
+    }
+    
+    vector<unsigned>
+    get_indices_for_min(vector<OptFraction> const& range) {
+        auto const rowsNum = range.size();
+        
+        auto it = range.cbegin();
+        while(!*it && it != range.cend()) {
+            ++it;
+        }
+        
+        if(it == range.cend()) {
+            return {};
+        }
+        
+        auto smallest = it;
+        for(++it; it != range.cend(); ++it) {
+            if(*it && **it < **smallest) smallest = it;
+        }
+        
+        vector<unsigned> ret;
+        for(auto i = 0u; i < rowsNum; ++i) {
+            if(range[i] && *range[i] == **smallest) ret.push_back(i);
+        }
+        return ret;
+    }
+    
+    vector<unsigned>
+    get_indices_for_min(vector<OptFraction> const& range, vector<unsigned> const& indicesToCheck) {
+        auto const rowsNum = range.size();
+        
+        auto smallest = indicesToCheck.empty() ? 0u : indicesToCheck.front();
+        for(auto i : indicesToCheck) {
+            if(*range[i] < *range[smallest]) smallest = i;
+        }
+        
+        vector<unsigned> ret;
+        for(auto i = 0u; i < rowsNum; ++i) {
+            if(*range[i] == *range[smallest]) ret.push_back(i);
+        }
+        return ret;
+    }
+
+    unsigned 
+    select_row(Solver::Step const& s, int col) {
+        auto rowsNum = s.restrs.size();
+        
+        auto dividend = get_col(s, 0);
+        auto const divisor = get_col(s, col);
+        
+        auto divs = divide_cols(dividend, divisor, Division::DontAllowNegative);
+        auto const initialIndices = get_indices_for_min(divs);
+        
+        if(initialIndices.size() == 1) {
+            return initialIndices.front();
+        }
+        
+        for(int i : s.goal.indices()) {
+            if(i == col) continue;
+            
+            dividend = get_col(s, i);
+            divs = divide_cols(dividend, divisor, Division::AllowNegative);
+            
+            auto minRows = get_indices_for_min(divs, initialIndices);
+            
+            if(minRows.size() == 1) {
+                return minRows.front();
+            }
+        }
+        
+        return rowsNum;
+    }
+    
+    Solver::Step 
+    advance_step(Solver::Step const& prev, int selCol, unsigned selRow) {
+        Solver::Step next = prev;
+        
+        if(next.goal.big(prev.sel[selRow].idx())) {
+            next.goal.remove_term(prev.sel[selRow].idx());
+            for(auto& r: next.restrs) {
+                r.remove_term(prev.sel[selRow].idx());
+            }
+            
+            auto idx = prev.sel[selRow].idx();
+            next.pprice.remove_term(idx);
+            next.mprice.remove_term(idx);
+        }
+        next.sel[selRow] = next.goal.term(selCol);
+        
+        auto restrsNum = prev.restrs.size();
+        auto divisor = prev.restrs[selRow].coeff(selCol);
+            
+        for(auto r = 0u; r < restrsNum; ++r) {
+            if(r == selRow) {
+                for(int i : next.goal.indices()) {
+                    next.restrs[r].coeff(i) /= divisor;
+                }
+                next.restrs[r].right() /= divisor;
+            }
+            else {
+                for(int i : next.goal.indices()) {
+                    next.restrs[r].coeff(i) =
+                        (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].coeff(i) -
+                        prev.restrs[r].coeff(selCol) * prev.restrs[selRow].coeff(i)) /
+                        divisor;
+                }
+                
+                next.restrs[r].right() =
+                    (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].right() -
+                    prev.restrs[r].coeff(selCol) * prev.restrs[selRow].right())
+                    / divisor;
+            }
+        }
+        
+        return next;
+    }
+
+    bool 
+    step_is_unique(Solver::Step const& step, vector<Solver::Step> const& steps) {
+        for(auto const& s : steps) {
+            if(step == s) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
-static bool step_is_unique(Solver::Step const& step, vector<Solver::Step> const& steps) {
-    for(auto const& s : steps) {
-        if(step == s) {
-            return false;
-        }
-    }
-    return true;
-}
+
 
 vector<Solver::Step> Solver::solve() {
     append_preferred();
