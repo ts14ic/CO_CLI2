@@ -6,4 +6,4 @@ Uses Boost.Optional
 
 Known issues
 ------------
-* No known at the moment
+* Can't solve confluent problems (Creco rule was not properly implemented)

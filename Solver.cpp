@@ -463,15 +463,15 @@ vector<Solver::Step> Solver::solve() {
     s.pprice.add_term(_goal.last_idx());
     s.mprice.add_term(_goal.last_idx());
     
-    
     while(true) {
         calculate_price(s);
         // if the step repeats itself, it's unsolvable
-        if(step_is_unique(s, steps)) {
+        if(!step_is_unique(s, steps)) {
             steps.push_back(s);
+            break;
         }
         else {
-            break;
+            steps.push_back(s);
         }
         
         int selCol = 0;
@@ -512,11 +512,7 @@ bool Solver::Step::valid() const {
 bool Solver::Step::operator ==(Step const& o) const {
     return goal == o.goal &&
            sel == o.sel &&
-           restrs == o.restrs &&
-           pprice == o.pprice &&
-           mprice == o.mprice &&
-           basis == o.basis &&
-           w == o.w && m == o.m;
+           restrs == o.restrs;
 }
 
 void Solver::Step::mark_as_valid() {

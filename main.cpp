@@ -595,9 +595,39 @@ SUITE(Solver) {
         
         s = solver[10].solve().back();
         CHECK(s.valid());
+        CHECK(s.basis.size() == 2);
+        CHECK(s.w == 18);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == 3);
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == 4);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
         
         s = solver[11].solve().back();
         CHECK(s.valid());
+        CHECK(s.basis.size() == 2);
+        CHECK(s.w == Fraction(54, 7));
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == Fraction(30, 7));
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == Fraction(12, 7));
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
     }
     
     TEST_FIXTURE(SolverFixture, Inversion) {
