@@ -28,7 +28,8 @@ private:
     std::vector<int>         _initialBasis;
 };
 
-struct Solver::Step {
+class Solver::Step {
+public:
     Goal                     goal;
     std::vector<Term>        sel;
     std::vector<Restriction> restrs;
@@ -39,7 +40,12 @@ struct Solver::Step {
     Fraction                 m;
     
     bool valid() const;
+    void mark_as_valid();
+    
     bool operator ==(Step const& o) const;
+    
+private:
+    bool _valid = false;
 };
 
 void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newline = false);

@@ -407,9 +407,19 @@ SUITE(Solver) {
             solver[9].add_restriction(" 2x1 + 4x2 <= 1");
             solver[9].add_restriction("-4x1 + 2x2 <= 8");
             solver[9].add_restriction(" 1x1 + 3x2 >= 9");
+            
+            solver[10].set_goal("2x1+3x2=>max");
+            solver[10].add_restriction(" 2x1 +  x2 <= 10");
+            solver[10].add_restriction("-2x1 + 3x2 <= 6");
+            solver[10].add_restriction(" 2x1 + 4x2 >= 8");
+            
+            solver[11].set_goal("x1 + 2x2 => max");
+            solver[11].add_restriction(" x1 + x2 <= 6");
+            solver[11].add_restriction("3x1 + 10x2 <= 30");
+            solver[11].add_restriction(" x1 + 11x2 >= 22");
         }
     
-        Solver solver[10];
+        Solver solver[12];
     };
     
     TEST(SolverSetup) {
@@ -582,6 +592,12 @@ SUITE(Solver) {
         
         s = solver[9].solve().back();
         CHECK(!s.valid());
+        
+        s = solver[10].solve().back();
+        CHECK(s.valid());
+        
+        s = solver[11].solve().back();
+        CHECK(s.valid());
     }
     
     TEST_FIXTURE(SolverFixture, Inversion) {
@@ -659,6 +675,30 @@ SUITE(Solver) {
                           "   1 -4 -2  3 <=\n"
                           "   0  0  0  0 <=\n"
                           "   0  0  0  1 <=\n"
+                          "]");
+        
+        solver[9].invert_to_dual();
+        ss.str(""); ss << solver[9];
+        CHECK(ss.str() == "[Solver\n"
+                          "max: -1 -8  9\n"
+                          "   1 -2  4  1 <=\n"
+                          "   1 -4 -2  3 <=\n"
+                          "]");
+        
+        solver[10].invert_to_dual();
+        ss.str(""); ss << solver[10];
+        CHECK(ss.str() == "[Solver\n"
+                          "min: 10  6 -8\n"
+                          "   2  2 -2 -2 >=\n"
+                          "   3  1  3 -4 >=\n"
+                          "]");
+        
+        solver[11].invert_to_dual();
+        ss.str(""); ss << solver[11];
+        CHECK(ss.str() == "[Solver\n"
+                          "min:  6 30 -22\n"
+                          "   1  1  3 -1 >=\n"
+                          "   2  1 10 -11 >=\n"
                           "]");
     }
     
@@ -836,9 +876,56 @@ SUITE(Solver) {
                 default: CHECK(0 == 1);
             }
         }
+        
+        s = solver[9].invert_to_dual().solve().back();
+        CHECK(!s.valid());
+        
+        s = solver[10].invert_to_dual().solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 3);
+        CHECK(s.w == 18);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == Fraction(3, 2));
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == Fraction(1, 2));
+                break;
+                
+                case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
+        
+        s = solver[11].invert_to_dual().solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 3);
+        CHECK(s.w == Fraction(54, 7));
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == Fraction(4, 7));
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == Fraction(1, 7));
+                break;
+                
+                case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
     }
 }
 
-int main(int argc, char* args[]) {
+int main(int, char*[]) {
     return UnitTest::RunAllTests();
 }

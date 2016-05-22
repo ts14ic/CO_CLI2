@@ -318,6 +318,8 @@ static void pack_end_results(Solver::Step& lastStep, vector<int> const& indices)
             lastStep.basis.push_back(Term{i});
         }
     }
+    
+    lastStep.mark_as_valid();
 }
 
 static vector<Optional<Fraction>>::const_iterator 
@@ -441,7 +443,9 @@ static Solver::Step advance_step(Solver::Step const& prev, int selCol, unsigned 
 
 static bool step_is_unique(Solver::Step const& step, vector<Solver::Step> const& steps) {
     for(auto const& s : steps) {
-        if(step == s) return false;
+        if(step == s) {
+            return false;
+        }
     }
     return true;
 }
@@ -462,6 +466,7 @@ vector<Solver::Step> Solver::solve() {
     
     while(true) {
         calculate_price(s);
+        // if the step repeats itself, it's unsolvable
         if(step_is_unique(s, steps)) {
             steps.push_back(s);
         }
@@ -473,21 +478,19 @@ vector<Solver::Step> Solver::solve() {
         if(need_to_calc_artificial(s)) {
             selCol = select_column(s, true);
         }
-        // if still no column
+        // if still no column or no need to calc artificial
         if(selCol == 0) {
             selCol = select_column(s, false);
         }
-        
-        // if again no column selected, it's finish
+        // if again no column selected, it's a finish
         if(selCol == 0) {
             pack_end_results(steps.back(), _initialBasis);
             break;
         }
         
         auto selRow = select_row(s, selCol);
-        // another finish, but this time it's unsolvable 100%
+        // if no row selected, it's unsolvable
         if(selRow == _restrs.size()) {
-            steps.back().basis.clear();
             break;
         }
         
@@ -499,12 +502,11 @@ vector<Solver::Step> Solver::solve() {
 }
 
 bool Solver::Step::valid() const {
-    if(basis.size() == 0) return false;
-    
-    for(auto const& t : goal.terms()) {
-        if(t.big()) return false;
+    for(auto const& term : goal.terms()) {
+        if(term.big()) return false;
     }
-    return true;
+    
+    return _valid;
 }
 
 bool Solver::Step::operator ==(Step const& o) const {
@@ -515,6 +517,10 @@ bool Solver::Step::operator ==(Step const& o) const {
            mprice == o.mprice &&
            basis == o.basis &&
            w == o.w && m == o.m;
+}
+
+void Solver::Step::mark_as_valid() {
+    _valid = true;
 }
 
 void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newline) {

@@ -1,6 +1,7 @@
 #include "Fraction.h"
 #include <stdexcept>
 #include <iostream>
+#include <boost/math/common_factor_rt.hpp>
 
 Fraction::Fraction(int n, int d) : _num(n), _den(d) {
     if(d == 0) throw std::logic_error("zero denominator");
@@ -182,22 +183,21 @@ bool Fraction::operator >= (int o) const {
 }
 
 void Fraction::simplify() {
+    // self-explanatory
     if(_num == 0) {
         _den = 1;
         return;
-	}
+    }
+    
+    // swap the sign to be in numerator
     if(_den < 0) {
         _num = -_num;
         _den = -_den;
-	}
-	int cap = _num * _den;
-	if(cap < 0) cap = -cap;
-	for(int i = cap; i > 1; --i) {
-		if((_den % i == 0) && (_num % i == 0)) {
-			_den /= i;
-			_num /= i;
-		}
-	}
+    }
+    
+    int gcd = boost::math::gcd(_num, _den);
+    _num /= gcd;
+    _den /= gcd;
 }
 
 std::ostream& operator <<(std::ostream& os, Fraction const& frac) {
