@@ -82,6 +82,52 @@ SUITE(Fraction) {
         CHECK(Fraction(10, 5) <= Fraction(10, 3));
         CHECK(Fraction(10, 5) <= Fraction(10, 5));
     }
+    
+    TEST(FractionInput) {
+        std::istringstream input;
+        Fraction a;
+        
+        // Only positive values can be read
+        input.str("25");
+        input >> a;
+        CHECK(a == 25);
+        
+        input.clear(); input.str("0");
+        input >> a;
+        CHECK(a == 0);
+        
+        input.clear(); input.str("54/7");
+        input >> a;
+        CHECK(a == Fraction(54, 7));
+        
+        input.clear(); input.str("1/2");
+        input >> a;
+        CHECK(a == Fraction(1, 2));
+        
+        // Invalid inputs are ignored and don't change the fraction
+        Fraction const prev = a;
+        
+        input.clear(); input.str("10/0");
+        input >> a;
+        CHECK(a == prev);
+        
+        input.clear(); input.str("5/");
+        input >> a;
+        CHECK(a == prev);
+        
+        input.clear(); input.str("adas");
+        input >> a;
+        CHECK(a == prev);
+        
+        // Read ends on fraction
+        input.clear(); input.str("3foo");
+        input >> a;
+        CHECK(a == 3);
+        
+        input.clear(); input.str("14/5X2");
+        input >> a;
+        CHECK(a == Fraction(14, 5));
+    }
 }
 
 
@@ -92,24 +138,24 @@ SUITE(Term) {
         Term a(10);
         ss << a;
         CHECK(ss.str() == "0{X10}");
-        ss.str("");
         
         Term d(3, Fraction(1, 5));
+        ss.clear(); ss.str("");
         ss << d;
         CHECK(ss.str() == "1/5{X3}");
-        ss.str("");
         
         Term b(3, Fraction(2, 3));
+        ss.clear(); ss.str("");
         ss << b;
         CHECK(ss.str() == "2/3{X3}");
-        ss.str("");
         
         Term coeff(3, true);
+        ss.clear(); ss.str("");
         ss << coeff;
         CHECK(ss.str() == "0M{X3}");
-        ss.str("");
         
         Term e(5, Fraction(1, 3), true);
+        ss.clear(); ss.str("");
         ss << e;
         CHECK(ss.str() == "1/3M{X5}");
     }
@@ -128,12 +174,12 @@ SUITE(Polynom) {
         
         CHECK(p.parse_and_set("10X2"));
         CHECK(p.size() == 2);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 0{X1} 10{X2}]");
         
         CHECK(p.parse_and_set("-5X1 + 2X3"));
         CHECK(p.size() == 3);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: -5{X1} 0{X2} 2{X3}]");
         
         CHECK(!p.parse_and_set("2X1 - X"));
@@ -180,14 +226,14 @@ SUITE(Polynom) {
         // simillar terms are summed
         p.add_term(1, Fraction(1, 3));
         CHECK(p.size() == 1);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 1{X1}]");
         
         // even with other terms in the way
         p.add_term(2, Fraction(4, 5));
         p.add_term(1, Fraction(3, 4));
         CHECK(p.size() == 2);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 7/4{X1} 4/5{X2}]");
         
         // terms are sorted
@@ -195,7 +241,7 @@ SUITE(Polynom) {
         CHECK(p.size() == 4);
         p.add_term(3, Fraction(2, 4));
         CHECK(p.size() == 4);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 7/4{X1} 4/5{X2} 1/2{X3} 1/8{X4}]");
         
         // and gaps are filled
@@ -205,16 +251,16 @@ SUITE(Polynom) {
         CHECK(p.size() == 4);
         p.add_term(2, Fraction(3, 5));
         CHECK(p.size() == 4);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 0{X1} 3/5{X2} 0{X3} 3/7{X4}]");
         
         // you can add M terms only after parsing
         p.remove_term(3);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 0{X1} 3/5{X2} 3/7{X4}]");
         
         p.add_term(3, Fraction{1, 3}, true);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 0{X1} 3/5{X2} 1/3M{X3} 3/7{X4}]");
     }
     
@@ -231,13 +277,13 @@ SUITE(Polynom) {
         
         p.remove_term(3);
         CHECK(p.size() == 2);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 3{X2} 3{X4}]");
         
         // can't delete what doesn't even exist
         p.remove_term(5);
         CHECK(p.size() == 2);
-        ss.str(""); ss << p;
+        ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 3{X2} 3{X4}]");
     }
 }
@@ -253,11 +299,11 @@ SUITE(GoalPolynom) {
         CHECK(ss.str() == "[Goal: 0{X1} 1{X2} 0{X3} 3{X4} => max]");
         
         CHECK(g.parse_and_set("-4x1 + 5x3 => max"));
-        ss.str(""); ss << g;
+        ss.clear(); ss.str(""); ss << g;
         CHECK(ss.str() == "[Goal: -4{X1} 0{X2} 5{X3} => max]");
         
         CHECK(g.parse_and_set("3x1 - 5x2 + 0x3 => min"));
-        ss.str(""); ss << g;
+        ss.clear(); ss.str(""); ss << g;
         CHECK(ss.str() == "[Goal: 3{X1} -5{X2} 0{X3} => min]");
         
         CHECK(!g.parse_and_set("3x1 - 5x2 + 0x3 > min"));
@@ -278,15 +324,15 @@ SUITE(GoalPolynom) {
         CHECK(ss.str() == "[Goal: 1{X2} 3{X4} => max]");
         
         g.add_term(1, Fraction(2, 3));
-        ss.str(""); ss << g;
+        ss.clear(); ss.str(""); ss << g;
         CHECK(ss.str() == "[Goal: 2/3{X1} 1{X2} 0{X3} 3{X4} => max]");
         
         g.add_term(1);
-        ss.str(""); ss << g;
+        ss.clear(); ss.str(""); ss << g;
         CHECK(ss.str() == "[Goal: 2/3{X1} 1{X2} 0{X3} 3{X4} => max]");
         
         g.add_term(5, 1, true);
-        ss.str(""); ss << g;
+        ss.clear(); ss.str(""); ss << g;
         CHECK(ss.str() == "[Goal: 2/3{X1} 1{X2} 0{X3} 3{X4} 1M{X5} => max]");
         
         CHECK(g.right() == "max");
@@ -306,19 +352,18 @@ SUITE(RestrictionPolynom) {
         CHECK(r0.parse_and_set("x2 + 3x4 <= 16"));
         ss << r0;
         CHECK(ss.str() == "[Restriction: 0{X1} 1{X2} 0{X3} 3{X4} <= 16]");
-        ss.str("");
         
         Restriction r1;
         CHECK(r1.parse_and_set("-4x1 + 5x3 == 10"));
+        ss.clear(); ss.str("");
         ss << r1;
         CHECK(ss.str() == "[Restriction: -4{X1} 0{X2} 5{X3} == 10]");
-        ss.str("");
         
         Restriction r2;
         CHECK(r2.parse_and_set("3x1 - 5x2 + 0x3 >= -14"));
+        ss.clear(); ss.str("");
         ss << r2;
         CHECK(ss.str() == "[Restriction: 3{X1} -5{X2} 0{X3} >= -14]");
-        ss.str("");
         
         Restriction r3;
         CHECK(!r3.parse_and_set("3x1 - 5x2 + 0x3 > -14"));
@@ -642,7 +687,7 @@ SUITE(Solver) {
                           "]");
         
         solver[1].invert_to_dual();
-        ss.str(""); ss << solver[1];
+        ss.clear(); ss.str(""); ss << solver[1];
         CHECK(ss.str() == "[Solver\n"
                           "max: -3  1 -4\n"
                           "   7 -5  1 -2 <=\n"
@@ -650,7 +695,7 @@ SUITE(Solver) {
                           "]");
         
         solver[2].invert_to_dual();
-        ss.str(""); ss << solver[2];
+        ss.clear(); ss.str(""); ss << solver[2];
         CHECK(ss.str() == "[Solver\n"
                           "max: -10 -6  8\n"
                           "   2 -2  2  2 <=\n"
@@ -658,7 +703,7 @@ SUITE(Solver) {
                           "]");
         
         solver[3].invert_to_dual();
-        ss.str(""); ss << solver[3];
+        ss.clear(); ss.str(""); ss << solver[3];
         CHECK(ss.str() == "[Solver\n"
                           "min: 17  5 -6\n"
                           "   2 12  3 -1 >=\n"
@@ -666,7 +711,7 @@ SUITE(Solver) {
                           "]");
         
         solver[4].invert_to_dual();
-        ss.str(""); ss << solver[4];
+        ss.clear(); ss.str(""); ss << solver[4];
         CHECK(ss.str() == "[Solver\n"
                           "min: 12 18 -10\n"
                           "   4  2  1 -2 >=\n"
@@ -674,7 +719,7 @@ SUITE(Solver) {
                           "]");
         
         solver[5].invert_to_dual();
-        ss.str(""); ss << solver[5];
+        ss.clear(); ss.str(""); ss << solver[5];
         CHECK(ss.str() == "[Solver\n"
                           "max: -12 -18 10\n"
                           "   4 -2 -1  2 <=\n"
@@ -682,7 +727,7 @@ SUITE(Solver) {
                           "]");
         
         solver[6].invert_to_dual();
-        ss.str(""); ss << solver[6];
+        ss.clear(); ss.str(""); ss << solver[6];
         CHECK(ss.str() == "[Solver\n"
                           "max: -12 -8  5\n"
                           "   2 -3  1  2 <=\n"
@@ -690,7 +735,7 @@ SUITE(Solver) {
                           "]");
         
         solver[7].invert_to_dual();
-        ss.str(""); ss << solver[7];
+        ss.clear(); ss.str(""); ss << solver[7];
         CHECK(ss.str() == "[Solver\n"
                           "min: 12 16 -25\n"
                           "   8  1  4 -5 >=\n"
@@ -698,7 +743,7 @@ SUITE(Solver) {
                           "]");
 
         solver[8].invert_to_dual();
-        ss.str(""); ss << solver[8];
+        ss.clear(); ss.str(""); ss << solver[8];
         CHECK(ss.str() == "[Solver\n"
                           "max: -16 -8  9\n"
                           "   1 -2  4  1 <=\n"
@@ -708,7 +753,7 @@ SUITE(Solver) {
                           "]");
         
         solver[9].invert_to_dual();
-        ss.str(""); ss << solver[9];
+        ss.clear(); ss.str(""); ss << solver[9];
         CHECK(ss.str() == "[Solver\n"
                           "max: -1 -8  9\n"
                           "   1 -2  4  1 <=\n"
@@ -716,7 +761,7 @@ SUITE(Solver) {
                           "]");
         
         solver[10].invert_to_dual();
-        ss.str(""); ss << solver[10];
+        ss.clear(); ss.str(""); ss << solver[10];
         CHECK(ss.str() == "[Solver\n"
                           "min: 10  6 -8\n"
                           "   2  2 -2 -2 >=\n"
@@ -724,7 +769,7 @@ SUITE(Solver) {
                           "]");
         
         solver[11].invert_to_dual();
-        ss.str(""); ss << solver[11];
+        ss.clear(); ss.str(""); ss << solver[11];
         CHECK(ss.str() == "[Solver\n"
                           "min:  6 30 -22\n"
                           "   1  1  3 -1 >=\n"

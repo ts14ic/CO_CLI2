@@ -13,6 +13,7 @@ public:
     int den() const;
 
     Fraction operator - () const;
+    Fraction& operator = (int v);
 
     Fraction operator + (Fraction o) const;
     Fraction operator * (Fraction o) const;
@@ -30,7 +31,6 @@ public:
     Fraction& operator -= (Fraction o);
     Fraction& operator *= (Fraction o);
     Fraction& operator /= (Fraction o);
-    
     
     Fraction operator * (int v) const;
     Fraction operator / (int v) const;
@@ -62,6 +62,7 @@ public:
     friend bool operator <= (int v, Fraction const& o);
 
     friend std::ostream& operator <<(std::ostream& os, Fraction const& frac);
+    friend std::istream& operator >>(std::istream& is, Fraction& frac);
 private:
     void simplify();
 
