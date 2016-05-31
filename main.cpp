@@ -167,26 +167,26 @@ SUITE(Polynom) {
         Polynom p;
         std::stringstream ss;
         
-        CHECK(p.parse_and_set("2X1 - x2"));
+        CHECK(p.parse_and_set("2/3X1 - x2"));
         CHECK(p.size() == 2);
         ss << p;
-        CHECK(ss.str() == "[Polynom: 2{X1} -1{X2}]");
+        CHECK(ss.str() == "[Polynom: 2/3{X1} -1{X2}]");
         
         CHECK(p.parse_and_set("10X2"));
         CHECK(p.size() == 2);
         ss.clear(); ss.str(""); ss << p;
         CHECK(ss.str() == "[Polynom: 0{X1} 10{X2}]");
         
-        CHECK(p.parse_and_set("-5X1 + 2X3"));
+        CHECK(p.parse_and_set("-5X1 + 2/3X3"));
         CHECK(p.size() == 3);
         ss.clear(); ss.str(""); ss << p;
-        CHECK(ss.str() == "[Polynom: -5{X1} 0{X2} 2{X3}]");
+        CHECK(ss.str() == "[Polynom: -5{X1} 0{X2} 2/3{X3}]");
         
         CHECK(!p.parse_and_set("2X1 - X"));
         CHECK(!p.parse_and_set("2X1 -"));
         CHECK(!p.parse_and_set("X1 + 10"));
 
-        CHECK(ss.str() == "[Polynom: -5{X1} 0{X2} 2{X3}]");
+        CHECK(ss.str() == "[Polynom: -5{X1} 0{X2} 2/3{X3}]");
     }
     
     TEST(PolynomTermGetSetting) {

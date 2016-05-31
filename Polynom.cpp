@@ -17,7 +17,7 @@ public:
         _sign = sign;
     }
     
-    void set_coeff(int coeff) {
+    void set_coeff(Fraction coeff) {
         _coeffSet = true;
         _coeff = coeff;
     }
@@ -30,13 +30,13 @@ public:
     // getters    
     char sign() const { return _sign; }
     bool sign_set() const { return _signSet; }
-    int  coeff() const { return _coeff; }
+    Fraction  coeff() const { return _coeff; }
     bool coeff_set() const { return _coeffSet; }
 
 private:
     char _sign;
     bool _signSet = false;
-    int  _coeff;
+    Fraction  _coeff;
     bool _coeffSet = false;
 };
 
@@ -61,7 +61,7 @@ bool Polynom::parse_and_set(std::string const& str, std::string* rest) {
             }
             if(std::isdigit(ch)) {
                 is.putback(ch);
-                int coeff;
+                Fraction coeff;
                 is >> coeff;
                 term.set_coeff(coeff);
                 state = State::coeff;
@@ -77,7 +77,7 @@ bool Polynom::parse_and_set(std::string const& str, std::string* rest) {
             case State::sign:
             if(std::isdigit(ch)) {
                 is.putback(ch);
-                int coeff;
+                Fraction coeff;
                 is >> coeff;
                 term.set_coeff(coeff);
                 state = State::coeff;
