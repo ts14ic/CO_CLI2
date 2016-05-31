@@ -7,7 +7,7 @@ class Fraction {
 public:
     Fraction(int n, int d);
     Fraction(int n);
-    Fraction();
+    Fraction() = default;
 
     int num() const;
     int den() const;

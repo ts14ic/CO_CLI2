@@ -87,10 +87,17 @@ SUITE(Fraction) {
         std::istringstream input;
         Fraction a;
         
-        // Only positive values can be read
         input.str("25");
         input >> a;
         CHECK(a == 25);
+        
+        input.clear(); input.str("-4/11");
+        input >> a;
+        CHECK(a == Fraction(-4, 11));
+        
+        input.clear(); input.str("+2/7");
+        input >> a;
+        CHECK(a == Fraction(2, 7));
         
         input.clear(); input.str("0");
         input >> a;
@@ -167,10 +174,10 @@ SUITE(Polynom) {
         Polynom p;
         std::stringstream ss;
         
-        CHECK(p.parse_and_set("2/3X1 - x2"));
+        CHECK(p.parse_and_set("-2/3X1 - x2"));
         CHECK(p.size() == 2);
         ss << p;
-        CHECK(ss.str() == "[Polynom: 2/3{X1} -1{X2}]");
+        CHECK(ss.str() == "[Polynom: -2/3{X1} -1{X2}]");
         
         CHECK(p.parse_and_set("10X2"));
         CHECK(p.size() == 2);
@@ -479,10 +486,10 @@ SUITE(Solver) {
         std::stringstream ss;
         ss << solver;
         CHECK(ss.str() == "[Solver\n"
-                          "min:  1  1\n"
-                          "   8 -4  2 <=\n"
-                          "   9  1  3 >=\n"
-                          "  16  2  4 <=\n]");
+                          "min:   1   1\n"
+                          "   8  -4   2 <=\n"
+                          "   9   1   3 >=\n"
+                          "  16   2   4 <=\n]");
     }
     
     TEST_FIXTURE(SolverFixture, SolverSolutions) {
@@ -681,99 +688,99 @@ SUITE(Solver) {
         solver[0].invert_to_dual();
         ss << solver[0];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -16 -8  9\n"
-                          "   1 -2  4  1 <=\n"
-                          "   1 -4 -2  3 <=\n"
+                          "max: -16  -8   9\n"
+                          "   1  -2   4   1 <=\n"
+                          "   1  -4  -2   3 <=\n"
                           "]");
         
         solver[1].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[1];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -3  1 -4\n"
-                          "   7 -5  1 -2 <=\n"
-                          "   2 -2 -1  1 >=\n"
+                          "max:  -3   1  -4\n"
+                          "   7  -5   1  -2 <=\n"
+                          "   2  -2  -1   1 >=\n"
                           "]");
         
         solver[2].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[2];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -10 -6  8\n"
-                          "   2 -2  2  2 <=\n"
-                          "   3 -1 -3  4 <=\n"
+                          "max: -10  -6   8\n"
+                          "   2  -2   2   2 <=\n"
+                          "   3  -1  -3   4 <=\n"
                           "]");
         
         solver[3].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[3];
         CHECK(ss.str() == "[Solver\n"
-                          "min: 17  5 -6\n"
-                          "   2 12  3 -1 >=\n"
-                          "   7 13  1 -4 >=\n"
+                          "min:  17   5  -6\n"
+                          "   2  12   3  -1 >=\n"
+                          "   7  13   1  -4 >=\n"
                           "]");
         
         solver[4].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[4];
         CHECK(ss.str() == "[Solver\n"
-                          "min: 12 18 -10\n"
-                          "   4  2  1 -2 >=\n"
-                          "   1 -1  3 -5 >=\n"
+                          "min:  12  18 -10\n"
+                          "   4   2   1  -2 >=\n"
+                          "   1  -1   3  -5 >=\n"
                           "]");
         
         solver[5].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[5];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -12 -18 10\n"
-                          "   4 -2 -1  2 <=\n"
-                          "   1  1 -3  5 <=\n"
+                          "max: -12 -18  10\n"
+                          "   4  -2  -1   2 <=\n"
+                          "   1   1  -3   5 <=\n"
                           "]");
         
         solver[6].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[6];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -12 -8  5\n"
-                          "   2 -3  1  2 <=\n"
-                          "   1  2 -2  3 <=\n"
+                          "max: -12  -8   5\n"
+                          "   2  -3   1   2 <=\n"
+                          "   1   2  -2   3 <=\n"
                           "]");
         
         solver[7].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[7];
         CHECK(ss.str() == "[Solver\n"
-                          "min: 12 16 -25\n"
-                          "   8  1  4 -5 >=\n"
-                          "   7 -2  1 -5 >=\n"
+                          "min:  12  16 -25\n"
+                          "   8   1   4  -5 >=\n"
+                          "   7  -2   1  -5 >=\n"
                           "]");
 
         solver[8].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[8];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -16 -8  9\n"
-                          "   1 -2  4  1 <=\n"
-                          "   1 -4 -2  3 <=\n"
-                          "   0  0  0  0 <=\n"
-                          "   0  0  0  1 <=\n"
+                          "max: -16  -8   9\n"
+                          "   1  -2   4   1 <=\n"
+                          "   1  -4  -2   3 <=\n"
+                          "   0   0   0   0 <=\n"
+                          "   0   0   0   1 <=\n"
                           "]");
         
         solver[9].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[9];
         CHECK(ss.str() == "[Solver\n"
-                          "max: -1 -8  9\n"
-                          "   1 -2  4  1 <=\n"
-                          "   1 -4 -2  3 <=\n"
+                          "max:  -1  -8   9\n"
+                          "   1  -2   4   1 <=\n"
+                          "   1  -4  -2   3 <=\n"
                           "]");
         
         solver[10].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[10];
         CHECK(ss.str() == "[Solver\n"
-                          "min: 10  6 -8\n"
-                          "   2  2 -2 -2 >=\n"
-                          "   3  1  3 -4 >=\n"
+                          "min:  10   6  -8\n"
+                          "   2   2  -2  -2 >=\n"
+                          "   3   1   3  -4 >=\n"
                           "]");
         
         solver[11].invert_to_dual();
         ss.clear(); ss.str(""); ss << solver[11];
         CHECK(ss.str() == "[Solver\n"
-                          "min:  6 30 -22\n"
-                          "   1  1  3 -1 >=\n"
-                          "   2  1 10 -11 >=\n"
+                          "min:   6  30 -22\n"
+                          "   1   1   3  -1 >=\n"
+                          "   2   1  10 -11 >=\n"
                           "]");
     }
     

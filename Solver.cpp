@@ -22,14 +22,15 @@ std::ostream& operator<<(std::ostream& os, Solver const& solver) {
     if(goal.size() != 0) {
         os << goal.right() << ':';
         for(int i : goal.indices()) {
-            os << ' ' << std::setw(2) << goal.coeff(i) << (goal.big(i) ? "M" : "");
+            os << std::setw(goal.big(i) ? 3 : 4) <<
+                  goal.coeff(i) << (goal.big(i) ? "M" : "");
         }
         os << '\n';
     }
     for(Restriction const& r : solver._restrs) {
         os << std::setw(4) << r.right();
         for(auto i : r.indices()) {
-            os << ' ' << std::setw(2) << r.coeff(i);
+            os << std::setw(4) << r.coeff(i);
         }
         os << " " << r.rel() << '\n';
     }

@@ -11,9 +11,6 @@ Fraction::Fraction(int n, int d) : _num(n), _den(d) {
 Fraction::Fraction(int n) : _num(n) {
 }
 
-Fraction::Fraction() {
-}
-
 int Fraction::num() const { return _num; }
 int Fraction::den() const { return _den; }
 
@@ -220,12 +217,18 @@ std::ostream& operator <<(std::ostream& os, Fraction const& frac) {
     return os << frac._num << '/' << frac._den;
 }
 
+inline namespace helpers {
+    bool is_sign(char ch) {
+        return ch == '-' || ch == '+';
+    }
+}
+
 std::istream& operator >>(std::istream& is, Fraction& frac) {
     std::istream::sentry streamOk (is);
     if(!streamOk) return is;
     
     enum class State {
-        begin, nominator, slash, denominator, end, error
+        begin, sign, nominator, slash, error
     };
     
     State state = State::begin;
@@ -244,9 +247,35 @@ std::istream& operator >>(std::istream& is, Fraction& frac) {
                     frac = num;
                     return is;
                 }
-                
-                state = State::nominator;
+                else {
+                    state = State::nominator;
+                    continue;
+                }
+            }
+            else if(is_sign(ch)) {
+                state = State::sign;
                 continue;
+            }
+            else {
+                state = State::error;
+            }
+            break;
+            
+            
+            case State::sign:
+            if(std::isdigit(ch)) {
+                is.putback(ch);
+                is.unget();
+                is >> num;
+                
+                if(is.eof()) {
+                    frac = num;
+                    return is;
+                }
+                else {
+                    state = State::nominator;
+                    continue;
+                }
             }
             else {
                 state = State::error;
@@ -285,7 +314,8 @@ std::istream& operator >>(std::istream& is, Fraction& frac) {
             }
             else {
                 is.putback(ch);
-                is.putback('/');
+                // put the slash back
+                is.unget();
                 return is;
             }
             break;
@@ -294,5 +324,7 @@ std::istream& operator >>(std::istream& is, Fraction& frac) {
         }
     }
     
+    // we can't be here after a successfull read
+    is.setstate(is.failbit);
     return is;
 }
