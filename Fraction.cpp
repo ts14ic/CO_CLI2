@@ -14,6 +14,10 @@ Fraction::Fraction(int n) : _num(n) {
 int Fraction::num() const { return _num; }
 int Fraction::den() const { return _den; }
 
+float Fraction::as_float() const {
+    return static_cast<float>(_num) / _den;
+}
+
 Fraction Fraction::operator-() const {
     return Fraction(-_num, _den);
 }
