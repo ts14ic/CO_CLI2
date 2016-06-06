@@ -471,15 +471,15 @@ inline namespace helpers {
             else {
                 for(int i : next.goal.indices()) {
                     next.restrs[r].coeff(i) =
-                        (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].coeff(i) -
+                        (divisor * prev.restrs[r].coeff(i) -
                         prev.restrs[r].coeff(selCol) * prev.restrs[selRow].coeff(i)) /
                         divisor;
                 }
                 
                 next.restrs[r].right() =
-                    (prev.restrs[selRow].coeff(selCol) * prev.restrs[r].right() -
-                    prev.restrs[r].coeff(selCol) * prev.restrs[selRow].right())
-                    / divisor;
+                    (divisor * prev.restrs[r].right() -
+                    prev.restrs[r].coeff(selCol) * prev.restrs[selRow].right()) / 
+                    divisor;
             }
         }
         
@@ -568,7 +568,9 @@ void Solver::Step::mark_as_valid() {
     _valid = true;
 }
 
-void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newline) {
+std::ostream& operator <<(std::ostream& os, Solver::Step const& s) {
+    if(!std::ostream::sentry {os}) return os;
+    
     auto tab = "   ";
     
     os << "<Step>\n";
@@ -576,12 +578,6 @@ void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newlin
     os << tab << "<Restrs>\n";
     for(auto i = 0u; i < s.restrs.size(); ++i) {
         os << tab << tab << s.restrs[i] << " " << s.sel[i] << "\n";
-    }
-    
-    if(!price) {
-        os << tab << "</Restrs>\n</Step>\n";
-        if(newline) os << "\n";
-        return;
     }
     
     os << tab << "</Restrs>\n" << tab << "<pprice>";
@@ -592,7 +588,6 @@ void print_step(std::ostream& os, Solver::Step const& s, bool price, bool newlin
     for(int i : s.mprice.indices()) {
         os << std::setw(4) << s.mprice.coeff(i);
     }
-    os << "</mprice>\n</Step>\n";
-    
-    if(newline) os << '\n';
+    os << "</mprice>\n</Step>";
+    return os;
 }
