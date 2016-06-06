@@ -30,40 +30,42 @@ Fraction& Fraction::operator =(int v) {
 
 Fraction Fraction::operator +(Fraction o) const {
     Fraction res = *this;
-    int commonDen = res._den * o._den;
-    res._num *= commonDen / res._den;
-    o._num *= commonDen / o._den;
+    int lcm = boost::math::lcm(res._den, o._den);
+    res._num *= lcm / res._den;
+    o._num *= lcm / o._den;
     res._num += o._num;
-    res._den = commonDen;
+    res._den = lcm;
     res.simplify();
     return res;
 }
 
 Fraction Fraction::operator -(Fraction o) const {
     Fraction res = *this;
-    int commonDen = res._den * o._den;
-    res._num *= commonDen / res._den;
-    o._num *= commonDen / o._den;
+    int lcm = boost::math::lcm(res._den, o._den);
+    res._num *= lcm / res._den;
+    o._num *= lcm / o._den;
     res._num -= o._num;
-    res._den = commonDen;
-    res.simplify();
+    res._den = lcm;
+    // res.simplify();
     return res;
 }
 
 Fraction Fraction::operator *(Fraction o) const {
     Fraction res = *this;
+    int gcd1 = boost::math::gcd(res._num, o._den);
+    int gcd2 = boost::math::gcd(res._den, o._num);
+    res._num /= gcd1;
+    res._den /= gcd2;
+    o._den /= gcd1;
+    o._num /= gcd2;
     res._num *= o._num;
     res._den *= o._den;
-    res.simplify();
+    // res.simplify();
     return res;
 }
 
 Fraction Fraction::operator /(Fraction o) const {
-    Fraction res = *this;
-    res._num *= o._den;
-    res._den *= o._num;
-    res.simplify();
-    return res;
+    return *this * Fraction(o._den, o._num);
 }
 
 Fraction& Fraction::operator +=(Fraction o) {
