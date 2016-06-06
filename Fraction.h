@@ -66,6 +66,7 @@ public:
     friend std::ostream& operator <<(std::ostream& os, Fraction const& frac);
     friend std::istream& operator >>(std::istream& is, Fraction& frac);
 private:
+    void normalize();
     void simplify();
 
     int _num = 0;

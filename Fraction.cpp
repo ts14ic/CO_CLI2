@@ -46,7 +46,7 @@ Fraction Fraction::operator -(Fraction o) const {
     o._num *= lcm / o._den;
     res._num -= o._num;
     res._den = lcm;
-    // res.simplify();
+    res.simplify();
     return res;
 }
 
@@ -60,7 +60,7 @@ Fraction Fraction::operator *(Fraction o) const {
     o._num /= gcd2;
     res._num *= o._num;
     res._den *= o._den;
-    // res.simplify();
+    res.simplify();
     return res;
 }
 
@@ -189,7 +189,7 @@ bool Fraction::operator >= (int o) const {
     return *this >= Fraction(o);
 }
 
-void Fraction::simplify() {
+void Fraction::normalize() {
     // self-explanatory
     if(_num == 0) {
         _den = 1;
@@ -201,6 +201,11 @@ void Fraction::simplify() {
         _num = -_num;
         _den = -_den;
     }
+}
+
+void Fraction::simplify() {
+    normalize();
+    if(_num == 0) return;
     
     int gcd = boost::math::gcd(_num, _den);
     _num /= gcd;
