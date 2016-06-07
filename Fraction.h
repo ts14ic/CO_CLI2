@@ -13,6 +13,7 @@ public:
     int den() const;
     
     float as_float() const;
+    explicit operator float() const;
 
     Fraction operator - () const;
     Fraction& operator = (int v);

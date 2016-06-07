@@ -18,6 +18,10 @@ float Fraction::as_float() const {
     return static_cast<float>(_num) / _den;
 }
 
+Fraction::operator float() const {
+    return as_float();
+}
+
 Fraction Fraction::operator-() const {
     return Fraction(-_num, _den);
 }
