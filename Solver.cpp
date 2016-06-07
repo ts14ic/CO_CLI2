@@ -554,6 +554,10 @@ bool Solver::Step::valid() const {
     for(auto const& term : goal.terms()) {
         if(term.big()) return false;
     }
+    for(auto const& p : pprice.terms()) {
+        if(goal.right() == "min" && p.coeff() > 0) return false;
+        if(goal.right() == "max" && p.coeff() < 0) return false;
+    }
     
     return _valid;
 }
