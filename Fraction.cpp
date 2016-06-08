@@ -3,16 +3,16 @@
 #include <iostream>
 #include <boost/math/common_factor_rt.hpp>
 
-Fraction::Fraction(int n, int d) : _num(n), _den(d) {
+Fraction::Fraction(int_t n, int_t d) : _num(n), _den(d) {
     if(d == 0) throw std::domain_error("zero denominator");
     simplify();
 }
 
-Fraction::Fraction(int n) : _num(n) {
+Fraction::Fraction(int_t n) : _num(n) {
 }
 
-int Fraction::num() const { return _num; }
-int Fraction::den() const { return _den; }
+Fraction::int_t Fraction::num() const { return _num; }
+Fraction::int_t Fraction::den() const { return _den; }
 
 float Fraction::as_float() const {
     return static_cast<float>(_num) / _den;
@@ -30,7 +30,7 @@ Fraction Fraction::operator-() const {
 // w Fractions operators
 Fraction Fraction::operator +(Fraction o) const {
     Fraction res = *this;
-    int lcm = boost::math::lcm(res._den, o._den);
+    int_t lcm = boost::math::lcm(res._den, o._den);
     res._num *= lcm / res._den;
     o._num *= lcm / o._den;
     res._num += o._num;
@@ -41,8 +41,8 @@ Fraction Fraction::operator +(Fraction o) const {
 
 Fraction Fraction::operator *(Fraction o) const {
     Fraction res = *this;
-    int gcd1 = boost::math::gcd(res._num, o._den);
-    int gcd2 = boost::math::gcd(res._den, o._num);
+    int_t gcd1 = boost::math::gcd(res._num, o._den);
+    int_t gcd2 = boost::math::gcd(res._den, o._num);
     res._num /= gcd1;
     res._den /= gcd2;
     o._den /= gcd1;
@@ -66,9 +66,9 @@ bool Fraction::operator ==(Fraction o) const {
 }
 
 bool Fraction::operator <(Fraction o) const {
-    int lcm = boost::math::lcm(_den, o._den);
-    int tnum = _num * (lcm / _den);
-    int onum = o._num * (lcm / o._den);
+    int_t lcm = boost::math::lcm(_den, o._den);
+    int_t tnum = _num * (lcm / _den);
+    int_t onum = o._num * (lcm / o._den);
     return tnum < onum;
 }
 
@@ -105,89 +105,85 @@ Fraction& Fraction::operator /=(Fraction o) {
 }
 
 // w ints operators
-Fraction& Fraction::operator =(int v) {
+Fraction& Fraction::operator =(int_t v) {
     _num = v;
     _den = 1;
     return *this;
 }
 
-Fraction Fraction::operator +(int v) const {
+Fraction Fraction::operator +(int_t v) const {
     Fraction res = *this;
     res._num += v * res._den;
     res.simplify();
     return res;
 }
 
-Fraction Fraction::operator *(int v) const {
+Fraction Fraction::operator *(int_t v) const {
     Fraction res = *this;
     res._num *= v;
     res.simplify();
     return res;
 }
 
-Fraction Fraction::operator -(int v) const {
+Fraction Fraction::operator -(int_t v) const {
     return *this + -v;
 }
 
-Fraction Fraction::operator /(int v) const {
-    if(v == 0) throw std::domain_error("Division by zero");
-    Fraction res = *this;
-    res._den *= v;
-    res.simplify();
-    return res;
+Fraction Fraction::operator /(int_t v) const {
+    return *this * Fraction(1, v);
 }
 
-Fraction& Fraction::operator +=(int v) {
+Fraction& Fraction::operator +=(int_t v) {
     return *this = *this + Fraction(v);
 }
 
-Fraction& Fraction::operator -=(int v) {
+Fraction& Fraction::operator -=(int_t v) {
     return *this = *this - Fraction(v);
 }
 
-Fraction& Fraction::operator *=(int v) {
+Fraction& Fraction::operator *=(int_t v) {
     return *this = *this * Fraction(v);
 }
 
-Fraction& Fraction::operator /=(int v) {
+Fraction& Fraction::operator /=(int_t v) {
     return *this = *this / Fraction(v);
 }
 
-bool Fraction::operator ==(int o) const {
+bool Fraction::operator ==(int_t o) const {
     return *this == Fraction(o);
 }
 
-bool Fraction::operator <(int o) const {
+bool Fraction::operator <(int_t o) const {
     return *this < Fraction(o);
 }
 
-bool Fraction::operator !=(int o) const {
+bool Fraction::operator !=(int_t o) const {
     return *this != Fraction(o);
 }
 
-bool Fraction::operator >(int o) const {
+bool Fraction::operator >(int_t o) const {
     return *this > Fraction(o);
 }
 
-bool Fraction::operator <=(int o) const {
+bool Fraction::operator <=(int_t o) const {
     return *this <= Fraction(o);
 }
 
-bool Fraction::operator >=(int o) const {
+bool Fraction::operator >=(int_t o) const {
     return *this >= Fraction(o);
 }
 
 // mirrored w ints operators
-Fraction operator *(int v, Fraction const& o) { return o * v; }
-Fraction operator /(int v, Fraction const& o) { return o / v; }
-Fraction operator +(int v, Fraction const& o) { return o + v; } 
-Fraction operator -(int v, Fraction const& o) { return o - v; }
-bool operator ==(int v, Fraction const& o) { return o == v; }
-bool operator !=(int v, Fraction const& o) { return o != v; }
-bool operator > (int v, Fraction const& o) { return o > v; }
-bool operator < (int v, Fraction const& o) { return o < v; }
-bool operator >=(int v, Fraction const& o) { return o >= v; }
-bool operator <=(int v, Fraction const& o) { return o <= v; }
+Fraction operator *(Fraction::int_t v, Fraction const& o) { return o * v; }
+Fraction operator /(Fraction::int_t v, Fraction const& o) { return o / v; }
+Fraction operator +(Fraction::int_t v, Fraction const& o) { return o + v; } 
+Fraction operator -(Fraction::int_t v, Fraction const& o) { return o - v; }
+bool operator ==(Fraction::int_t v, Fraction const& o) { return o == v; }
+bool operator !=(Fraction::int_t v, Fraction const& o) { return o != v; }
+bool operator > (Fraction::int_t v, Fraction const& o) { return o > v; }
+bool operator < (Fraction::int_t v, Fraction const& o) { return o < v; }
+bool operator >=(Fraction::int_t v, Fraction const& o) { return o >= v; }
+bool operator <=(Fraction::int_t v, Fraction const& o) { return o <= v; }
 
 void Fraction::normalize() {
     // self-explanatory
@@ -207,7 +203,7 @@ void Fraction::simplify() {
     normalize();
     if(_num == 0) return;
     
-    int gcd = boost::math::gcd(_num, _den);
+    int_t gcd = boost::math::gcd(_num, _den);
     _num /= gcd;
     _den /= gcd;
 }
@@ -235,8 +231,8 @@ std::istream& operator >>(std::istream& is, Fraction& frac) {
     };
     
     State state = State::begin;
-    int num;
-    int den;
+    Fraction::int_t num;
+    Fraction::int_t den;
 
     char ch;
     while(is >> ch) {

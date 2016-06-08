@@ -62,6 +62,9 @@ SUITE(Fraction) {
         
         a += 1;
         CHECK(Fraction(11, 6) == a);
+        
+        CHECK_THROW(a / Fraction(), std::domain_error);
+        CHECK_THROW(a / 0, std::domain_error);
     }
     
     TEST(FractionComparisons) {

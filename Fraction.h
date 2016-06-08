@@ -5,12 +5,14 @@
 
 class Fraction {
 public:
-    Fraction(int n, int d);
-    Fraction(int n);
+    using int_t = long;
+
+    Fraction(int_t n, int_t d);
+    Fraction(int_t n);
     Fraction() = default;
 
-    int num() const;
-    int den() const;
+    int_t num() const;
+    int_t den() const;
     
     float as_float() const;
     explicit operator float() const;
@@ -37,37 +39,37 @@ public:
     Fraction& operator /=(Fraction o);
     
     // w ints operators
-    Fraction& operator =(int v);
+    Fraction& operator =(int_t v);
     
-    Fraction operator *(int v) const;
-    Fraction operator /(int v) const;
-    Fraction operator +(int v) const;
-    Fraction operator -(int v) const;
+    Fraction operator *(int_t v) const;
+    Fraction operator /(int_t v) const;
+    Fraction operator +(int_t v) const;
+    Fraction operator -(int_t v) const;
     
-    Fraction& operator *=(int v);
-    Fraction& operator /=(int v);
-    Fraction& operator +=(int v);
-    Fraction& operator -=(int v);
+    Fraction& operator *=(int_t v);
+    Fraction& operator /=(int_t v);
+    Fraction& operator +=(int_t v);
+    Fraction& operator -=(int_t v);
     
-    bool operator ==(int o) const;
-    bool operator < (int o) const;
-    bool operator !=(int o) const;
-    bool operator > (int o) const;
-    bool operator >=(int o) const;
-    bool operator <=(int o) const;
+    bool operator ==(int_t o) const;
+    bool operator < (int_t o) const;
+    bool operator !=(int_t o) const;
+    bool operator > (int_t o) const;
+    bool operator >=(int_t o) const;
+    bool operator <=(int_t o) const;
     
     //  mirrored w ints operators
-    friend Fraction operator *(int v, Fraction const& o);
-    friend Fraction operator /(int v, Fraction const& o);
-    friend Fraction operator +(int v, Fraction const& o);
-    friend Fraction operator -(int v, Fraction const& o);
+    friend Fraction operator *(int_t v, Fraction const& o);
+    friend Fraction operator /(int_t v, Fraction const& o);
+    friend Fraction operator +(int_t v, Fraction const& o);
+    friend Fraction operator -(int_t v, Fraction const& o);
     
-    friend bool operator ==(int v, Fraction const& o);
-    friend bool operator < (int v, Fraction const& o);
-    friend bool operator !=(int v, Fraction const& o);
-    friend bool operator > (int v, Fraction const& o);
-    friend bool operator >=(int v, Fraction const& o);
-    friend bool operator <=(int v, Fraction const& o);
+    friend bool operator ==(int_t v, Fraction const& o);
+    friend bool operator < (int_t v, Fraction const& o);
+    friend bool operator !=(int_t v, Fraction const& o);
+    friend bool operator > (int_t v, Fraction const& o);
+    friend bool operator >=(int_t v, Fraction const& o);
+    friend bool operator <=(int_t v, Fraction const& o);
     
     friend std::ostream& operator <<(std::ostream& os, Fraction const& frac);
     friend std::istream& operator >>(std::istream& is, Fraction& frac);
@@ -75,8 +77,8 @@ private:
     void normalize();
     void simplify();
 
-    int _num = 0;
-    int _den = 1;
+    int_t _num = 0;
+    int_t _den = 1;
 };
 
 #endif // FRACTION_H_INCLUDED
