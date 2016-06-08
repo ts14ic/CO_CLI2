@@ -15,55 +15,60 @@ public:
     float as_float() const;
     explicit operator float() const;
 
-    Fraction operator - () const;
-    Fraction& operator = (int v);
+    // Unary operators
+    Fraction operator -() const;
 
-    Fraction operator + (Fraction o) const;
-    Fraction operator * (Fraction o) const;
-    Fraction operator / (Fraction o) const;
-    Fraction operator - (Fraction o) const;
+    // w Fractions operators
+    Fraction operator +(Fraction o) const;
+    Fraction operator *(Fraction o) const;
+    Fraction operator -(Fraction o) const;
+    Fraction operator /(Fraction o) const;
     
-    bool operator == (Fraction o) const;
-    bool operator != (Fraction o) const;
-    bool operator >  (Fraction o) const;
-    bool operator <  (Fraction o) const;
-    bool operator >= (Fraction o) const;
-    bool operator <= (Fraction o) const;
-
-    Fraction& operator += (Fraction o);
-    Fraction& operator -= (Fraction o);
-    Fraction& operator *= (Fraction o);
-    Fraction& operator /= (Fraction o);
+    bool operator ==(Fraction o) const;
+    bool operator < (Fraction o) const;
+    bool operator !=(Fraction o) const;
+    bool operator > (Fraction o) const;
+    bool operator >=(Fraction o) const;
+    bool operator <=(Fraction o) const;
     
-    Fraction operator * (int v) const;
-    Fraction operator / (int v) const;
-    Fraction operator + (int v) const;
-    Fraction operator - (int v) const;
+    Fraction& operator +=(Fraction o);
+    Fraction& operator -=(Fraction o);
+    Fraction& operator *=(Fraction o);
+    Fraction& operator /=(Fraction o);
     
-    bool operator == (int o) const;
-    bool operator != (int o) const;
-    bool operator >  (int o) const;
-    bool operator <  (int o) const;
-    bool operator >= (int o) const;
-    bool operator <= (int o) const;
+    // w ints operators
+    Fraction& operator =(int v);
     
-    Fraction& operator *= (int v);
-    Fraction& operator /= (int v);
-    Fraction& operator += (int v);
-    Fraction& operator -= (int v);
+    Fraction operator *(int v) const;
+    Fraction operator /(int v) const;
+    Fraction operator +(int v) const;
+    Fraction operator -(int v) const;
     
-    friend Fraction operator * (int v, Fraction const& o);
-    friend Fraction operator / (int v, Fraction const& o);
-    friend Fraction operator + (int v, Fraction const& o);
-    friend Fraction operator - (int v, Fraction const& o);
+    Fraction& operator *=(int v);
+    Fraction& operator /=(int v);
+    Fraction& operator +=(int v);
+    Fraction& operator -=(int v);
     
-    friend bool operator == (int v, Fraction const& o);
-    friend bool operator != (int v, Fraction const& o);
-    friend bool operator >  (int v, Fraction const& o);
-    friend bool operator <  (int v, Fraction const& o);
-    friend bool operator >= (int v, Fraction const& o);
-    friend bool operator <= (int v, Fraction const& o);
-
+    bool operator ==(int o) const;
+    bool operator < (int o) const;
+    bool operator !=(int o) const;
+    bool operator > (int o) const;
+    bool operator >=(int o) const;
+    bool operator <=(int o) const;
+    
+    //  mirrored w ints operators
+    friend Fraction operator *(int v, Fraction const& o);
+    friend Fraction operator /(int v, Fraction const& o);
+    friend Fraction operator +(int v, Fraction const& o);
+    friend Fraction operator -(int v, Fraction const& o);
+    
+    friend bool operator ==(int v, Fraction const& o);
+    friend bool operator < (int v, Fraction const& o);
+    friend bool operator !=(int v, Fraction const& o);
+    friend bool operator > (int v, Fraction const& o);
+    friend bool operator >=(int v, Fraction const& o);
+    friend bool operator <=(int v, Fraction const& o);
+    
     friend std::ostream& operator <<(std::ostream& os, Fraction const& frac);
     friend std::istream& operator >>(std::istream& is, Fraction& frac);
 private:
@@ -73,7 +78,5 @@ private:
     int _num = 0;
     int _den = 1;
 };
-
-
 
 #endif // FRACTION_H_INCLUDED

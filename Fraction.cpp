@@ -22,33 +22,18 @@ Fraction::operator float() const {
     return as_float();
 }
 
+// Unary operators
 Fraction Fraction::operator-() const {
     return Fraction(-_num, _den);
 }
 
-Fraction& Fraction::operator =(int v) {
-    _num = v;
-    _den = 1;
-    return *this;
-}
-
+// w Fractions operators
 Fraction Fraction::operator +(Fraction o) const {
     Fraction res = *this;
     int lcm = boost::math::lcm(res._den, o._den);
     res._num *= lcm / res._den;
     o._num *= lcm / o._den;
     res._num += o._num;
-    res._den = lcm;
-    res.simplify();
-    return res;
-}
-
-Fraction Fraction::operator -(Fraction o) const {
-    Fraction res = *this;
-    int lcm = boost::math::lcm(res._den, o._den);
-    res._num *= lcm / res._den;
-    o._num *= lcm / o._den;
-    res._num -= o._num;
     res._den = lcm;
     res.simplify();
     return res;
@@ -68,8 +53,39 @@ Fraction Fraction::operator *(Fraction o) const {
     return res;
 }
 
+Fraction Fraction::operator -(Fraction o) const {
+    return *this + -o;
+}
+
 Fraction Fraction::operator /(Fraction o) const {
     return *this * Fraction(o._den, o._num);
+}
+
+bool Fraction::operator ==(Fraction o) const {
+    return _num == o._num && _den == o._den;
+}
+
+bool Fraction::operator <(Fraction o) const {
+    int lcm = boost::math::lcm(_den, o._den);
+    int tnum = _num * (lcm / _den);
+    int onum = o._num * (lcm / o._den);
+    return tnum < onum;
+}
+
+bool Fraction::operator !=(Fraction o) const {
+    return !(*this == o);
+}
+
+bool Fraction::operator >(Fraction o) const {
+    return *this != o && !(*this < o);
+}
+
+bool Fraction::operator <=(Fraction o) const {
+    return *this == o || *this < o;
+}
+
+bool Fraction::operator >=(Fraction o) const {
+    return *this == o || *this > o;
 }
 
 Fraction& Fraction::operator +=(Fraction o) {
@@ -88,11 +104,11 @@ Fraction& Fraction::operator /=(Fraction o) {
     return *this = *this / o;
 }
 
-Fraction Fraction::operator *(int v) const {
-    Fraction res = *this;
-    res._num *= v;
-    res.simplify();
-    return res;
+// w ints operators
+Fraction& Fraction::operator =(int v) {
+    _num = v;
+    _den = 1;
+    return *this;
 }
 
 Fraction Fraction::operator +(int v) const {
@@ -102,11 +118,15 @@ Fraction Fraction::operator +(int v) const {
     return res;
 }
 
-Fraction Fraction::operator -(int v) const {
+Fraction Fraction::operator *(int v) const {
     Fraction res = *this;
-    res._num -= v * res._den;
+    res._num *= v;
     res.simplify();
     return res;
+}
+
+Fraction Fraction::operator -(int v) const {
+    return *this + -v;
 }
 
 Fraction Fraction::operator /(int v) const {
@@ -133,65 +153,41 @@ Fraction& Fraction::operator /=(int v) {
     return *this = *this / Fraction(v);
 }
 
-bool Fraction::operator == (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum == o._num;
-}
-
-bool Fraction::operator != (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum != o._num;
-}
-
-bool Fraction::operator > (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum > o._num;
-}
-
-bool Fraction::operator < (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum < o._num;
-}
-
-bool Fraction::operator <= (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum <= o._num;
-}
-
-bool Fraction::operator >= (Fraction o) const {
-    int tnum = _num * o._den;
-    o._num *= _den;
-    return tnum >= o._num;
-}
-
-bool Fraction::operator == (int o) const {
+bool Fraction::operator ==(int o) const {
     return *this == Fraction(o);
 }
 
-bool Fraction::operator != (int o) const {
-    return *this != Fraction(o);
-}
-
-bool Fraction::operator > (int o) const {
-    return *this > Fraction(o);
-}
-
-bool Fraction::operator < (int o) const {
+bool Fraction::operator <(int o) const {
     return *this < Fraction(o);
 }
 
-bool Fraction::operator <= (int o) const {
+bool Fraction::operator !=(int o) const {
+    return *this != Fraction(o);
+}
+
+bool Fraction::operator >(int o) const {
+    return *this > Fraction(o);
+}
+
+bool Fraction::operator <=(int o) const {
     return *this <= Fraction(o);
 }
 
-bool Fraction::operator >= (int o) const {
+bool Fraction::operator >=(int o) const {
     return *this >= Fraction(o);
 }
+
+// mirrored w ints operators
+Fraction operator *(int v, Fraction const& o) { return o * v; }
+Fraction operator /(int v, Fraction const& o) { return o / v; }
+Fraction operator +(int v, Fraction const& o) { return o + v; } 
+Fraction operator -(int v, Fraction const& o) { return o - v; }
+bool operator ==(int v, Fraction const& o) { return o == v; }
+bool operator !=(int v, Fraction const& o) { return o != v; }
+bool operator > (int v, Fraction const& o) { return o > v; }
+bool operator < (int v, Fraction const& o) { return o < v; }
+bool operator >=(int v, Fraction const& o) { return o >= v; }
+bool operator <=(int v, Fraction const& o) { return o <= v; }
 
 void Fraction::normalize() {
     // self-explanatory
@@ -216,18 +212,10 @@ void Fraction::simplify() {
     _den /= gcd;
 }
 
-Fraction operator * (int v, Fraction const& o) { return o * v; }
-Fraction operator / (int v, Fraction const& o) { return o / v; }
-Fraction operator + (int v, Fraction const& o) { return o + v; } 
-Fraction operator - (int v, Fraction const& o) { return o - v; }
-bool operator == (int v, Fraction const& o) { return o == v; }
-bool operator != (int v, Fraction const& o) { return o != v; }
-bool operator >  (int v, Fraction const& o) { return o > v; }
-bool operator <  (int v, Fraction const& o) { return o < v; }
-bool operator >= (int v, Fraction const& o) { return o >= v; }
-bool operator <= (int v, Fraction const& o) { return o <= v; }
-
 std::ostream& operator <<(std::ostream& os, Fraction const& frac) {
+    std::ostream::sentry sentry {os};
+    if(!sentry) return os;
+    
     if(frac._den == 1) return os << frac._num;
     return os << frac._num << '/' << frac._den;
 }
