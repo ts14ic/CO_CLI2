@@ -398,15 +398,13 @@ inline namespace helpers {
     
     vector<unsigned>
     get_indices_for_min(vector<OptFraction> const& range, vector<unsigned> const& indicesToCheck) {
-        auto const rowsNum = range.size();
-        
         auto smallest = indicesToCheck.empty() ? 0u : indicesToCheck.front();
         for(auto i : indicesToCheck) {
             if(*range[i] < *range[smallest]) smallest = i;
         }
         
         vector<unsigned> ret;
-        for(auto i = 0u; i < rowsNum; ++i) {
+        for(auto i : indicesToCheck) {
             if(*range[i] == *range[smallest]) ret.push_back(i);
         }
         return ret;

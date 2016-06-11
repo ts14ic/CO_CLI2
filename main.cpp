@@ -472,9 +472,15 @@ SUITE(Solver) {
             solver[11].add_restriction(" x1 + x2 <= 6");
             solver[11].add_restriction("3x1 + 10x2 <= 30");
             solver[11].add_restriction(" x1 + 11x2 >= 22");
+            
+            solver[12].set_goal("x1 + 2x2 => max");
+            solver[12].add_restriction("x1 + x2 <= 4");
+            solver[12].add_restriction("3x1 + x2 >= 4");
+            solver[12].add_restriction("x1 + 5x2 >= 4");
+            solver[12].add_restriction("x1 <= 3");
         }
     
-        Solver solver[12];
+        Solver solver[13];
     };
     
     TEST(SolverSetup) {
@@ -683,6 +689,24 @@ SUITE(Solver) {
                 default: CHECK(0 == 1);
             }
         }
+        
+        s = solver[12].solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 2);
+        CHECK(s.w == 8);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == 4);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
     }
     
     TEST_FIXTURE(SolverFixture, Inversion) {
@@ -785,6 +809,15 @@ SUITE(Solver) {
                           "   1   1   3  -1 >=\n"
                           "   2   1  10 -11 >=\n"
                           "]");
+        
+        solver[12].invert_to_dual();
+        ss.clear(); ss.str(""); ss << solver[12];
+        CHECK(ss.str() == "[Solver\n"
+                          "min:   4  -4  -4   3\n"
+                          "   1   1  -3  -1   1 >=\n"
+                          "   2   1  -1  -5   0 >=\n"
+                          "]"
+        );
     }
     
     TEST_FIXTURE(SolverFixture, SolvingInverted) {
@@ -1002,6 +1035,32 @@ SUITE(Solver) {
                 break;
                 
                 case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                default: CHECK(0 == 1);
+            }
+        }
+        
+        s = solver[12].invert_to_dual().solve().back();
+        CHECK(s.valid());
+        CHECK(s.basis.size() == 4);
+        CHECK(s.w == 8);
+        for(auto t: s.basis) {
+            switch(t.idx()) {
+                case 1:
+                CHECK(t.coeff() == Fraction(5, 2));
+                break;
+                
+                case 2:
+                CHECK(t.coeff() == Fraction(1, 2));
+                break;
+                
+                case 3:
+                CHECK(t.coeff() == 0);
+                break;
+                
+                case 4:
                 CHECK(t.coeff() == 0);
                 break;
                 
