@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="CO" Database="">
+  <Project Name="Lib23" Path="Lib23/Lib23.project" Active="No"/>
+  <Project Name="Gui23" Path="Gui23/Gui23.project" Active="No"/>
+  <Project Name="Gui45" Path="Gui45/Gui45.project" Active="Yes"/>
+  <Project Name="Lib45" Path="Lib45/Lib45.project" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="no">
+      <Environment/>
+      <Project Name="Lib23" ConfigName="Debug"/>
+      <Project Name="Gui23" ConfigName="Debug"/>
+      <Project Name="Gui45" ConfigName="Debug"/>
+      <Project Name="Lib45" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Environment/>
+      <Project Name="Lib23" ConfigName="Release"/>
+      <Project Name="Gui23" ConfigName="Release"/>
+      <Project Name="Gui45" ConfigName="Release"/>
+      <Project Name="Lib45" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>
